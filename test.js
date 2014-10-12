@@ -1,9 +1,9 @@
 /**
- * Unittests for node-amfast module.
+ * Unittests for node_amf_cc module.
  */
 
 var sys = require('sys'); 
-var amfast = require('./build/Release/amfast');
+var amfcc = require('./build/Release/node_amf_cc');
 
 // To make this line work, "npm install amflib"
 var amflib = require('amflib/node-amf/amf');
@@ -66,13 +66,14 @@ for( var t = 0, n = 0; t < tests.length; t++ ){
 		var s = sys.inspect(value).replace(/\n/g,' ');
 		sys.puts( ' > ' +descr+ ': ' + s);
 		// serializing twice must not affect results
-                amfast.serializer().serialize( value );
+                amfcc.serializer().serialize( value );
 		// serialize and show AMF packet
-		var Ser = amfast.serializer();
+		var Ser = amfcc.serializer();
 		var bin = Ser.serialize( value );
-		//sys.puts( utils.hex(bin,16) );
+                //dump(bin);	
+	        //sys.puts( utils.hex(bin,16) );
 		// deserialize and compare value
-		var Des = amflib.deserializer(new Buffer(bin, 'binary'));
+		var Des = amflib.deserializer(bin);
 		var value2 = Des.readValue( amflib.AMF3 );
 		var s2 =  sys.inspect(value2).replace(/\n/g,' ');
 		// simple value test if value is scalar

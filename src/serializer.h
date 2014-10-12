@@ -3,6 +3,7 @@
 
 #include <node.h>
 #include <stdint.h>
+#include <ext/hash_map>
 #include "buffer.h"
 
 class Serializer : public node::ObjectWrap {
@@ -31,11 +32,12 @@ class Serializer : public node::ObjectWrap {
   bool writeDateIf(v8::Handle<v8::Object> date);
   void writeNumber(v8::Handle<v8::Value>, bool writeMarker = false);
   void writeDouble(v8::Handle<v8::Value>, bool writeMarker = false);
-  void writeU8(char n);
+  void writeU8(uint16_t n);
   void writeU29(int64_t n, bool writeMarker = false);
-  void writeBinaryString(const char* str, int len);
 
   Buffer buffer_;
+  //__gnu_cxx::hash_map<std::string, int> objRefs_;
+  bool useRefs_;
 };
 
 #endif  // SERIALIZER_H

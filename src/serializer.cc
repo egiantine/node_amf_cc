@@ -15,7 +15,7 @@ using namespace v8;
 namespace {
 const int INSTANCE_NO_TRAITS_NO_EXTERNALIZABLE = 11;
 
-const char SERIALIZED_NaN[] = "\0\0\0\0\0\0\xF8\x7F"; 
+const uint16_t SERIALIZED_NaN[] = { 0, 0, 0, 0, 0, 0, 248, 127 };
 }
 
 Persistent<Function> Serializer::constructor;
@@ -24,6 +24,7 @@ int Serializer::bigEndian = 0;
 
 Serializer::Serializer() {
   clear(); 
+useRefs_ = false;
 }
 
 Serializer::~Serializer() { 
@@ -64,9 +65,18 @@ Handle<Value> Serializer::Serialize(const Arguments& args) {
 
   Serializer* obj = ObjectWrap::Unwrap<Serializer>(args.This());
 
+#if NO_TEST_REFS
   if (args.Length() != 1) {
     die("Need exactly one argument");
   }
+#else  // NO_TEST_REFS
+  if (args.Length() > 1) {
+    obj->useRefs_ = true;
+  }
+  if (args.Length() > 2 || args.Length() < 1) {
+    die ("asdfxxlen");
+  }
+#endif // NO_TEST_REFS
 
   obj->writeValue(args[0]);
 
@@ -204,7 +214,9 @@ void Serializer::writeDouble(Handle<Value> value, bool writeMarker) {
   }
   double doubleValue = value->NumberValue();
   if (isnan(doubleValue)) {
-    writeBinaryString(SERIALIZED_NaN, sizeof(SERIALIZED_NaN));
+    for (int i = 0; i < sizeof(SERIALIZED_NaN); ++i) {
+      writeU8(SERIALIZED_NaN[i]);
+    }
     return;
   }
   // from amfast
@@ -227,14 +239,8 @@ void Serializer::writeDouble(Handle<Value> value, bool writeMarker) {
   }
 }
 
-void Serializer::writeU8(char n) {
+void Serializer::writeU8(uint16_t n) {
   buffer_.write(n);
-}
-
-void Serializer::writeBinaryString(const char* str, int len) {
-  for (int i = 0; i < len; ++i) {
-    writeU8(str[i]);
-  }
 }
 
 void Serializer::writeU29(int64_t n, bool writeMarker) {
