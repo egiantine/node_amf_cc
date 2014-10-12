@@ -8,4 +8,4 @@ void Init(Handle<Object> exports) {
   Serializer::Init(exports);  
 }
 
-NODE_MODULE(amfast, Init)
+NODE_MODULE(node_amf_cc, Init)

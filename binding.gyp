@@ -1,7 +1,7 @@
 {
   "targets": [
     {
-      "target_name": "amfast",
+      "target_name": "node_amf_cc",
       "sources": [ 
         "src/addon.cc", 
         "src/amf.cc", 
