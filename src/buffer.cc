@@ -19,7 +19,7 @@ int Buffer::size() const {
   return bytes_.size();
 }
 
-void Buffer::write(uint16_t ch) {
+void Buffer::write(unsigned char ch) {
   bytes_.push_back(ch);
 }
 

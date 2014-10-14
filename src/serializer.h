@@ -32,11 +32,11 @@ class Serializer : public node::ObjectWrap {
   bool writeDateIf(v8::Handle<v8::Object> date);
   void writeNumber(v8::Handle<v8::Value>, bool writeMarker = false);
   void writeDouble(v8::Handle<v8::Value>, bool writeMarker = false);
-  void writeU8(uint16_t n);
+  void writeU8(unsigned char n);
   void writeU29(int64_t n, bool writeMarker = false);
 
   Buffer buffer_;
-  //__gnu_cxx::hash_map<std::string, int> objRefs_;
+  __gnu_cxx::hash_map<int, int> objRefs_;
   bool useRefs_;
 };
 

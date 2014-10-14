@@ -53,9 +53,9 @@ var tests = [
 // note that this doesn't prove it works with Flash, just that it agrees with amflib.
 sys.puts('Serializing and deserializing '+tests.length+' test values');
 
-function dump(bin) {
+function dump(bin, prefix) {
   for (var i = 0; i < bin.length; i++) {
-    sys.puts(i + "> " + bin[i].charCodeAt());
+    sys.puts(prefix + i + "> " + bin[i].charCodeAt());
   }
 }
 
@@ -66,7 +66,12 @@ for( var t = 0, n = 0; t < tests.length; t++ ){
 		var s = sys.inspect(value).replace(/\n/g,' ');
 		sys.puts( ' > ' +descr+ ': ' + s);
 		// serializing twice must not affect results
-                amfcc.serializer().serialize( value );
+                var experiment = amfcc.serializer().serialize(value);
+                var baseline = amflib.serializer().writeValue(value);
+                if (experiment !== baseline) {
+                  dump(experiment, "exp");
+                  dump(baseline, "base");
+                }
 		// serialize and show AMF packet
 		var Ser = amfcc.serializer();
 		var bin = Ser.serialize( value );

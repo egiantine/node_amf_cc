@@ -24,7 +24,6 @@ int Serializer::bigEndian = 0;
 
 Serializer::Serializer() {
   clear(); 
-useRefs_ = false;
 }
 
 Serializer::~Serializer() { 
@@ -84,6 +83,8 @@ Handle<Value> Serializer::Serialize(const Arguments& args) {
 }
 
 void Serializer::clear() {
+  objRefs_.clear();
+  useRefs_ = false;
   buffer_.clear();
 }
 
@@ -135,17 +136,16 @@ void Serializer::writeUTF8(Handle<String> value, bool writeMarker) {
   int flag = (encodedLen << 1) | 1;
   writeU29(flag);
 
-  // TODO: Fix annoying bug due to String class inability to read binary 
   std::vector<char> utf8str(encodedLen+1);
   value->WriteUtf8(utf8str.data());
   for (int i = 0; i < encodedLen; ++i) {
-    buffer_.write(utf8str.data()[i]);
+    writeU8(static_cast<unsigned char>(utf8str.data()[i]));
   }
 }
 
 void Serializer::writeArray(Handle<Array> value) {
   writeU8(AMF::AMF3_ARRAY);
-  // TODO: support object references
+  // NOT supporting object references in serialization
   int len = value->Length(); 
   // flag with XXXXXXX1 indicating length of dense portion with instance
   int flag = ( len << 1 ) | 1;
@@ -158,12 +158,23 @@ void Serializer::writeArray(Handle<Array> value) {
 
 void Serializer::writeObject(Handle<Object> value) {
   writeU8(AMF::AMF3_OBJECT);
-  // TODO support object references
+  int valueId = value->GetIdentityHash();
+  // support object references
+  if (objRefs_.find(valueId) != objRefs_.end()) {
+    writeU29(objRefs_[valueId] << 1);
+    return;
+  }
+  // else index object reference
+  objRefs_[valueId] = objRefs_.size();
+  // flag with instance, no traits, no externalizable
   writeU29(INSTANCE_NO_TRAITS_NO_EXTERNALIZABLE);
+  if (value->HasRealNamedProperty(String::New("type"))) {
+    writeUTF8(value->Get(String::New("type"))->ToString());
+  } else {
+  // TODO declare string constants as static
+    writeUTF8(String::New("Object")); 
+  } 
 
-  // TODO support named classes
-  writeUTF8(String::New("Object")); 
- 
   // write serializable properties
   Local<Array> propertyNames = value->GetPropertyNames();
   for (uint i = 0; i < propertyNames->Length(); i++) {
@@ -200,7 +211,7 @@ void Serializer::writeNumber(Handle<Value> value, bool writeMarker) {
   Local<Integer> integer = value->ToInteger();
   if (!integer->IsNull()) {
     int64_t val = integer->Value();
-    if (val == value->NumberValue() && val >= 0 && val < 0x2000000) {
+    if (val == value->NumberValue() && val >= 0 && val < 0x20000000) {
       writeU29(val, writeMarker);
       return;
     }
@@ -214,7 +225,7 @@ void Serializer::writeDouble(Handle<Value> value, bool writeMarker) {
   }
   double doubleValue = value->NumberValue();
   if (isnan(doubleValue)) {
-    for (int i = 0; i < sizeof(SERIALIZED_NaN); ++i) {
+    for (uint i = 0; i < ARRAYSIZE(SERIALIZED_NaN); ++i) {
       writeU8(SERIALIZED_NaN[i]);
     }
     return;
@@ -223,9 +234,9 @@ void Serializer::writeDouble(Handle<Value> value, bool writeMarker) {
   // https://code.google.com/p/amfast/source/browse/trunk/amfast/ext_src/encoder.c
   union aligned {
     double d_value;
-    char c_value[8];
+    unsigned char c_value[8];
   } d_aligned;
-  char *char_value = d_aligned.c_value;
+  unsigned char *char_value = d_aligned.c_value;
   d_aligned.d_value = doubleValue;
 
   if (bigEndian) {
@@ -239,16 +250,21 @@ void Serializer::writeDouble(Handle<Value> value, bool writeMarker) {
   }
 }
 
-void Serializer::writeU8(uint16_t n) {
+void Serializer::writeU8(unsigned char n) {
   buffer_.write(n);
 }
 
 void Serializer::writeU29(int64_t n, bool writeMarker) {
-  std::vector<char> bytes;
+  std::vector<unsigned char> bytes;
   if (n < 0) {
     die("U29 range error - negative number");
   }
-  bytes.push_back(n & 0x7F);
+  if (n < 0x00200000) {
+    bytes.push_back(n & 0x7F);
+  } else {
+    bytes.push_back(n & 0xFF);
+    bytes.push_back(0x80 | ( (n>>=8) & 0x7F )); 
+  }
   while (n >= 0x80) {
     bytes.push_back(0x80 | ( n>>=7 & 0x7F ));
   }
