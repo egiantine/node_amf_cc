@@ -1,23 +1,23 @@
-#ifndef BUFFER_H
-#define BUFFER_H
+#ifndef WRITE_BUFFER_H
+#define WRITE_BUFFER_H
 
+#include <node.h>
 #include <stdint.h>
 #include <vector>
 
 /*
- * Buffer object.
+ * WriteBuffer object.
  *
  * Each "byte" is stored in a uint16_t because that's what the v8 string class
  * takes in its initializer; if I try to give it an array of char*s, it attempts
  * to UTF8 decode it, ruining the AMF format.
  */
-class Buffer {
+class WriteBuffer {
  public:
-  Buffer();
-  ~Buffer();
+  WriteBuffer();
+  ~WriteBuffer();
 
-  const uint16_t* data() const;
-  int size() const;
+  v8::Handle<v8::String> toString() const;
 
   void write(unsigned char ch);
 
@@ -27,4 +27,4 @@ class Buffer {
   std::vector<uint16_t> bytes_;
 }; 
 
-#endif  // BUFFER_H
+#endif  // WRITE_BUFFER_H

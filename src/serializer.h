@@ -4,7 +4,7 @@
 #include <node.h>
 #include <stdint.h>
 #include <ext/hash_map>
-#include "buffer.h"
+#include "write_buffer.h"
 
 class Serializer : public node::ObjectWrap {
  public:
@@ -35,9 +35,8 @@ class Serializer : public node::ObjectWrap {
   void writeU8(unsigned char n);
   void writeU29(int64_t n, bool writeMarker = false);
 
-  Buffer buffer_;
+  WriteBuffer buffer_;
   __gnu_cxx::hash_map<int, int> objRefs_;
-  bool useRefs_;
 };
 
 #endif  // SERIALIZER_H

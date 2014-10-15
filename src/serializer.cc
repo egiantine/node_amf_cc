@@ -64,31 +64,17 @@ Handle<Value> Serializer::Serialize(const Arguments& args) {
 
   Serializer* obj = ObjectWrap::Unwrap<Serializer>(args.This());
 
-#if NO_TEST_REFS
-  if (args.Length() != 1) {
-    die("Need exactly one argument");
-  }
-#else  // NO_TEST_REFS
-  if (args.Length() > 1) {
-    obj->useRefs_ = true;
-  }
-  if (args.Length() > 2 || args.Length() < 1) {
-    die ("asdfxxlen");
-  }
-#endif // NO_TEST_REFS
-
   obj->writeValue(args[0]);
 
-  return scope.Close(String::New(obj->buffer_.data(), obj->buffer_.size()));
+  return scope.Close(obj->buffer_.toString());
 }
 
 void Serializer::clear() {
   objRefs_.clear();
-  useRefs_ = false;
   buffer_.clear();
 }
 
-// Begin straight-up port of node-amf's serializer.js
+// Begin straight-up port of node-amf's serialize.js
 
 /**
  * Write any JavaScript value, automatically chooses which data type to use
