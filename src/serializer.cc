@@ -30,9 +30,7 @@ Serializer::~Serializer() {
 }
 
 void Serializer::Init(Handle<Object> exports) {
-  // Endian test
-  const int endian_test = 1;
-  bigEndian = !!is_bigendian();
+  bigEndian = isBigEndian();
 
   // Prepare constructor template
   Local<FunctionTemplate> tpl = FunctionTemplate::New(New);
@@ -64,6 +62,9 @@ Handle<Value> Serializer::Serialize(const Arguments& args) {
 
   Serializer* obj = ObjectWrap::Unwrap<Serializer>(args.This());
 
+  if (args.Length() != 1) {
+    die("Need exactly one argument");
+  }
   obj->writeValue(args[0]);
 
   return scope.Close(obj->buffer_.toString());

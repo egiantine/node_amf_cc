@@ -1,13 +1,7 @@
 #ifndef AMF_H
 #define AMF_H
 
-#include <node.h>
-
 namespace AMF {
-
-// pseudo constants
-static const int AMF0 = 0;
-static const int AMF3 = 3;
 
 // AMF3 markers
 static const int AMF3_UNDEFINED = 0;
@@ -24,10 +18,6 @@ static const int AMF3_OBJECT = 0x0A;
 static const int AMF3_XML = 0x0B;
 static const int AMF3_BYTE_ARRAY = 0x0C;
 
-
 }  // end namespace AMF
-
-#define is_bigendian() ((*(char*)&endian_test) == 0)
-
 
 #endif  // AMF_H

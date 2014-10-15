@@ -8,4 +8,8 @@ void die(const char* msg) {
   ThrowException(Exception::TypeError(String::New(msg)));
 }
 
+bool isBigEndian() {
+  const int endian_test = 1;
+ return !!((*(char*)&endian_test) == 0);
+}
 

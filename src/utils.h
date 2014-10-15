@@ -4,6 +4,7 @@
 #include <node.h>
 
 void die(const char* msg);
+bool isBigEndian();
 
 #define ARRAYSIZE(a) \
   ((sizeof(a) / sizeof(*(a))) / \

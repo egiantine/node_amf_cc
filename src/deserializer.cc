@@ -1,5 +1,4 @@
 #define BUILDING_NODE_EXTENSION
-#include <math.h>  // isnan
 #include <node.h>
 
 #include "amf.h"
@@ -10,20 +9,13 @@ using namespace v8;
 
 Persistent<Function> Deserializer::constructor;
 
-int Deserializer::bigEndian = 0;
-
 Deserializer::Deserializer() {
-  clear(); 
 }
 
 Deserializer::~Deserializer() { 
 }
 
 void Deserializer::Init(Handle<Object> exports) {
-  // Endian test
-  const int endian_test = 1;
-  bigEndian = !!is_bigendian();
-
   // Prepare constructor template
   Local<FunctionTemplate> tpl = FunctionTemplate::New(New);
   tpl->SetClassName(String::NewSymbol("deserializer"));
@@ -54,12 +46,21 @@ Handle<Value> Deserializer::Deserialize(const Arguments& args) {
 
   Deserializer* obj = ObjectWrap::Unwrap<Deserializer>(args.This());
 
-  //obj->readValue(args[0]);
+ if (args.Length() != 1) {
+    die("Need exactly one argument");
+  }
+ 
+  obj->init(args[0]->ToString());
 
-  return scope.Close(String::New("TODO"));
+  return scope.Close(obj->readValue());
 }
 
-void Deserializer::clear() {
+void Deserializer::init(Handle<String> payload) {
+  buffer_.reset(new ReadBuffer(payload));
+}
+
+Handle<Value> Deserializer::readValue() {
+  return String::New("TODO");
 }
 
 
