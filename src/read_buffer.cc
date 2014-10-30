@@ -20,7 +20,7 @@ ReadBuffer::~ReadBuffer() {
 bool ReadBuffer::read(uint8_t** dest, int len) {
   *dest = &bytes_[pos_];
   pos_ += len;
-  return (pos_ < bytes_.size());
+  return (pos_ <= bytes_.size());
 }
 
 bool ReadBuffer::readUInt8(uint8_t* output) {
@@ -84,7 +84,9 @@ bool ReadBuffer::readUInt32(uint32_t* output) {
 // _decode_double
 bool ReadBuffer::readDouble(double* output) {
   uint8_t* bytes= NULL;
-  if (!read(&bytes, 8)) return false;
+  if (!read(&bytes, 8)) {
+    return false;
+  }
 
   // Put bytes from byte array into double
   union aligned {

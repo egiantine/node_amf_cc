@@ -22,6 +22,12 @@ class Deserializer : public node::ObjectWrap {
   void init(v8::Handle<v8::String> payload);
 
   v8::Handle<v8::Value> readValue();
+  v8::Handle<v8::Value> readInteger();
+  v8::Handle<v8::Value> readDouble();
+  v8::Handle<v8::Value> readUTF8();
+  v8::Handle<v8::Value> readArray();
+  v8::Handle<v8::Value> readObject();
+  v8::Handle<v8::Value> readDate();
 
   std::auto_ptr<ReadBuffer> buffer_;
 };

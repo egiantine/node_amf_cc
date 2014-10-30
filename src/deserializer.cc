@@ -5,6 +5,7 @@
 #include "deserializer.h"
 #include "utils.h"
 
+using namespace AMF;
 using namespace v8;
 
 Persistent<Function> Deserializer::constructor;
@@ -60,7 +61,64 @@ void Deserializer::init(Handle<String> payload) {
 }
 
 Handle<Value> Deserializer::readValue() {
-  return String::New("TODO");
+  uint8_t marker = AMF3_UNDEFINED;;
+  buffer_->readUInt8(&marker);
+  switch (marker) {
+    case AMF3_UNDEFINED: 
+      return Undefined();
+    case AMF3_NULL:
+      return Null();
+    case AMF3_FALSE:
+      return False();
+    case AMF3_TRUE:
+      return True();
+    case AMF3_INTEGER:
+      return readInteger();
+    case AMF3_DOUBLE:
+      return readDouble();
+    case AMF3_STRING:
+      return readUTF8();
+    case AMF3_ARRAY:
+      return readArray();
+    case AMF3_OBJECT:
+      return readObject();
+    case AMF3_DATE:
+      return readDate();
+    default: 
+      die("Unsupported AMF3 marker");
+  }  
+  return Undefined();
 }
 
+Handle<Value> Deserializer::readInteger() {
+  int32_t v;
+  if (!buffer_->readInt29(&v)) {
+    return Undefined();
+  }
+  return Integer::New(v);
+}
+
+Handle<Value> Deserializer::readDouble() {
+  double v;
+  if (!buffer_->readDouble(&v)) {
+    return Undefined();
+  }
+  return Number::New(v);
+}
+
+Handle<Value> Deserializer::readUTF8() {
+  return String::New("");
+}
+
+Handle<Value> Deserializer::readArray() {
+  return Undefined();
+}
+
+Handle<Value> Deserializer::readObject() {
+  return Undefined();
+}
+
+Handle<Value> Deserializer::readDate() {
+  return Undefined();
+}
 
