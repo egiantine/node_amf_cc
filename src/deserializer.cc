@@ -149,11 +149,37 @@ Handle<Array> Deserializer::readArray() {
   return a;
 }
 
-Handle<Value> Deserializer::readObject() {
-  return Undefined();
+Handle<Object> Deserializer::readObject() {
+  // TODO: obj refs
+
+  int32_t n = 0;
+  if (!buffer_->readInt29(&n)) {
+    die("Object attributes not found");
+  }
+  // TODO: obj refs
+
+
+  Handle<Object> o = Object::New();
+  Handle<String> key;
+/*
+  while (!(key = readUTF8()).IsEmpty() && key->Length() != 0) {
+    o->Set(key, readValue());
+  }
+*/
+  return o;
+
 }
 
 Handle<Value> Deserializer::readDate() {
-  return Undefined();
+  int32_t n = 0;
+  if (!buffer_->readInt29(&n)) {
+    die("Object attributes not found");
+  }
+  // TODO: obj refs
+  double time;
+  if (!buffer_->readDouble(&time)) {
+    die("Time expected");
+  }
+  return Date::New(time);
 }
 
