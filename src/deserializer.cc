@@ -11,6 +11,7 @@ using namespace v8;
 // TODO: way better error messages
 // die() takes formatstr
 // high bit bug 
+// trigger GC to make sure no leaks
 
 Persistent<Function> Deserializer::constructor;
 
@@ -156,18 +157,22 @@ Handle<Object> Deserializer::readObject() {
   if (!buffer_->readInt29(&n)) {
     die("Object attributes not found");
   }
-  // TODO: obj refs
 
+  if (n & 1) {
+    // This is the first time we've seen this object
+    Handle<Object> o = Object::New();
 
-  Handle<Object> o = Object::New();
-  Handle<String> key;
-/*
-  while (!(key = readUTF8()).IsEmpty() && key->Length() != 0) {
-    o->Set(key, readValue());
+    Handle<String> classname = readUTF8();
+    Handle<String> key;
+
+    while (!(key = readUTF8()).IsEmpty() && key->Length() != 0) {
+      o->Set(key, readValue());
+    }
+    return o;
+  } else {
+    // TODO: Handle object refs
+    return Object::New();
   }
-*/
-  return o;
-
 }
 
 Handle<Value> Deserializer::readDate() {
