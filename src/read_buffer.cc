@@ -1,8 +1,15 @@
 #define BUILDING_NODE_EXTENSION
+
+#include <limits>
+
 #include "read_buffer.h"
 #include "utils.h"
 
 using namespace v8;
+
+namespace {
+const static uint16_t ENCODED_NAN[] = {  0, 0, 0, 0, 0, 0, 0xf8, 0x7f };
+}  // end namespace
 
 ReadBuffer::ReadBuffer(Handle<String> payload) 
   : big_endian_(isBigEndian()),
@@ -87,6 +94,12 @@ bool ReadBuffer::readDouble(double* output) {
   uint16_t* data = NULL;
   if (!read(&data, 8)) {
     return false;
+  }
+
+  // Special case NaN
+  if (memcmp(data, ENCODED_NAN, sizeof(uint16_t) * 8) == 0) { 
+    *output = std::numeric_limits<double>::quiet_NaN();
+    return true;
   }
 
   // Put bytes from byte array into double
