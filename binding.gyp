@@ -4,7 +4,6 @@
       "target_name": "node_amf_cc",
       "sources": [ 
         "src/addon.cc", 
-        "src/amf.cc", 
         "src/deserializer.cc",
         "src/read_buffer.cc",
         "src/serializer.cc",
