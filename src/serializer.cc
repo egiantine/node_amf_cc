@@ -139,7 +139,7 @@ void Serializer::writeArray(Handle<Array> value) {
   writeU29(flag);
   writeUTF8(String::Empty());
   for (int i = 0; i < len; i++) {
-    writeValue(value->CloneElementAt(i));
+    writeValue(value->Get(i));
   }
 }
 

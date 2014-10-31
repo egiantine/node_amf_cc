@@ -36,6 +36,8 @@ var tests = [
   ['null', null],
   // Arrays
   ['empty array', [] ],
+  ['mixed array', [ 1, 'ab', true ] ],
+  ['integer array', [ 1, -1, 2, -2, 3, -3, 4, -4, 5, -5 ] ],
   ['sparse array', [undefined,undefined,undefined,undefined,undefined,undefined] ],
   ['multi-dimensional array',  [[[],[]],[],] ],
   // special objects
@@ -83,7 +85,7 @@ for (var i = 0; i < tests.length; i++) {
   }
 
   // Test deserialization using original value as baseline.
-  //var baselineValue = amflib.deserializer(baselineBuffer).readValue(amflib.AMF3);
+  var baselineValue = amflib.deserializer(baselineBuffer).readValue(amflib.AMF3);
   var experimentValue = amfcc.deserializer().deserialize(baselineBuffer);
 
   try {
@@ -96,6 +98,7 @@ for (var i = 0; i < tests.length; i++) {
     succeeded += 1;
   } catch (e) {
     sys.puts("Deserialization error: " + e.message);
+    sys.puts("Baseline: " + baselineValue);
     failed += 1;
   }
 }
