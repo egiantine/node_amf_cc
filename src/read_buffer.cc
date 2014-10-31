@@ -6,27 +6,28 @@ using namespace v8;
 
 ReadBuffer::ReadBuffer(Handle<String> payload) 
   : big_endian_(isBigEndian()),
+    shorts_(payload->Length()),
     pos_(0) {
-  std::vector<uint16_t> temp(payload->Length());
-  payload->Write(temp.data());
-  for (uint32_t i = 0; i < temp.size(); ++i) {
-    bytes_.push_back(temp[i]);
-  }
+  payload->Write(shorts_.data());
 }
 
 ReadBuffer::~ReadBuffer() {
 }
 
-bool ReadBuffer::read(uint8_t** dest, int len) {
-  *dest = &bytes_[pos_];
+uint32_t ReadBuffer::pos() const {
+  return pos_;
+}
+
+bool ReadBuffer::read(uint16_t** dest, int len) {
+  *dest = &shorts_[pos_];
   pos_ += len;
-  return (pos_ <= bytes_.size());
+  return (pos_ <= shorts_.size());
 }
 
 bool ReadBuffer::readUInt8(uint8_t* output) {
-  uint8_t* data = NULL;
+  uint16_t* data = NULL;
   if (!read(&data, 1)) return false;
-  *output = *data;
+  *output = (uint8_t)(*data);
   return true;
 }
 
@@ -35,21 +36,21 @@ bool ReadBuffer::readUInt8(uint8_t* output) {
 
 // _decode_ushort
 bool ReadBuffer::readUInt16(uint16_t* output) {
-  uint8_t* bytes= NULL;
-  if (!read(&bytes, 2)) return false;
+  uint16_t* data = NULL;
+  if (!read(&data, 2)) return false;
 
-  // Put bytes from byte array into short
+  // Put data from byte array into short
   union aligned {
     uint16_t s_val;
     uint8_t c_val[2];
   } s;
 
   if (big_endian_) {
-    memcpy(s.c_val, bytes, 2);
+    for (int i = 0; i < 2; ++i) s.c_val[i] = (uint8_t)data[i];
   } else {
     // Flip endianness
-    s.c_val[0] = bytes[1];
-    s.c_val[1] = bytes[0];
+    s.c_val[0] = (uint8_t)data[1];
+    s.c_val[1] = (uint8_t)data[0];
   }
 
   *output = s.s_val;  
@@ -58,23 +59,23 @@ bool ReadBuffer::readUInt16(uint16_t* output) {
 
 // _decode_ulong
 bool ReadBuffer::readUInt32(uint32_t* output) {
-  uint8_t* bytes= NULL;
-  if (!read(&bytes, 4)) return false;
+  uint16_t* data = NULL;
+  if (!read(&data, 4)) return false;
   
-  // Put bytes from byte array into short
+  // Put data from byte array into short
   union aligned {
     uint32_t i_val;
     uint8_t c_val[4];
   } i;
 
   if (big_endian_) {
-    memcpy(i.c_val, bytes, 4);
+    for (int j = 0; j < 4; ++j) i.c_val[j] = (uint8_t)data[j];
   } else {
     // Flip endianness
-    i.c_val[0] = bytes[3];
-    i.c_val[1] = bytes[2];
-    i.c_val[2] = bytes[1];
-    i.c_val[3] = bytes[0];
+    i.c_val[0] = (uint16_t)data[3];
+    i.c_val[1] = (uint16_t)data[2];
+    i.c_val[2] = (uint16_t)data[1];
+    i.c_val[3] = (uint16_t)data[0];
   }
 
   *output = i.i_val;
@@ -83,8 +84,8 @@ bool ReadBuffer::readUInt32(uint32_t* output) {
 
 // _decode_double
 bool ReadBuffer::readDouble(double* output) {
-  uint8_t* bytes= NULL;
-  if (!read(&bytes, 8)) {
+  uint16_t* data = NULL;
+  if (!read(&data, 8)) {
     return false;
   }
 
@@ -95,17 +96,17 @@ bool ReadBuffer::readDouble(double* output) {
   } d;
 
   if (big_endian_) {
-    memcpy(d.c_val, bytes, 8);
+    for (int i = 0; i < 8; ++i) d.c_val[i] = (uint8_t)data[i];
   } else {
     // Flip endianness
-    d.c_val[0] = bytes[7];
-    d.c_val[1] = bytes[6];
-    d.c_val[2] = bytes[5];
-    d.c_val[3] = bytes[4];
-    d.c_val[4] = bytes[3];
-    d.c_val[5] = bytes[2];
-    d.c_val[6] = bytes[1];
-    d.c_val[7] = bytes[0];
+    d.c_val[0] = data[7];
+    d.c_val[1] = data[6];
+    d.c_val[2] = data[5];
+    d.c_val[3] = data[4];
+    d.c_val[4] = data[3];
+    d.c_val[5] = data[2];
+    d.c_val[6] = data[1];
+    d.c_val[7] = data[0];
   }
 
   *output = d.d_val;
@@ -116,16 +117,16 @@ bool ReadBuffer::readDouble(double* output) {
 bool ReadBuffer::readInt29(int32_t* output) {
   int32_t result = 0;
   uint32_t byte_cnt = 0;
-  uint8_t* bytes = NULL;
-  if (!read(&bytes, 1)) return false;
-  uint8_t byte = *bytes;
+  uint16_t* data = NULL;
+  if (!read(&data, 1)) return false;
+  uint8_t byte = (uint8_t)*data;
 
     // If 0x80 is set, int includes the next byte, up to 4 total bytes
   while ((byte & 0x80) && (byte_cnt < 3)) {
     result <<= 7;
     result |= byte & 0x7F;
-    if (!read(&bytes, 1)) return false;
-    byte = *bytes;;
+    if (!read(&data, 1)) return false;
+    byte = *data;
     byte_cnt++;
   }
 

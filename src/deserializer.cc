@@ -8,6 +8,10 @@
 using namespace AMF;
 using namespace v8;
 
+// TODO: way better error messages
+// die() takes formatstr
+// high bit bug 
+
 Persistent<Function> Deserializer::constructor;
 
 Deserializer::Deserializer() {
@@ -35,6 +39,7 @@ Handle<Value> Deserializer::New(const Arguments& args) {
     // Invoked as constructor: `new Deserializer(...)`
     Deserializer* obj = new Deserializer();
     obj->Wrap(args.This());
+
     return args.This();
   } else {
     // Invoked as plain function `Deserializer(...)`, turn into construct call.
@@ -90,28 +95,58 @@ Handle<Value> Deserializer::readValue() {
   return Undefined();
 }
 
-Handle<Value> Deserializer::readInteger() {
+Handle<Integer> Deserializer::readInteger() {
   int32_t v;
   if (!buffer_->readInt29(&v)) {
-    return Undefined();
+    die("Integer expected but not found at position"); 
   }
   return Integer::New(v);
 }
 
-Handle<Value> Deserializer::readDouble() {
+Handle<Number> Deserializer::readDouble() {
   double v;
   if (!buffer_->readDouble(&v)) {
-    return Undefined();
+    // TODO: make die take varargs and format string
+    die("Double expected but not found at position");
   }
   return Number::New(v);
 }
 
-Handle<Value> Deserializer::readUTF8() {
-  return String::New("");
+Handle<String> Deserializer::readUTF8() {
+  int32_t n = 0;
+  if (!buffer_->readInt29(&n)) {
+    die("String expected but no length information found");
+  }
+
+  // TODO: string refs
+  int32_t len = n >> 1;
+  uint16_t* str = NULL;
+  if (!buffer_->read(&str, len)) {
+    die("String expected but not long enough");
+  }
+  return String::New(str, len);
 }
 
-Handle<Value> Deserializer::readArray() {
-  return Undefined();
+Handle<Array> Deserializer::readArray() {
+  int32_t n = 0;
+  if (!buffer_->readInt29(&n)) {
+    die("Array length not found");
+  }
+  // TODO: obj refs
+
+  // Count dense portion of array
+  int32_t len = n >> 1;
+
+  // Skip the associative portion of the array: unsupported in Javascript
+  while (readUTF8()->Length() != 0) {
+    readValue();
+  }
+ 
+  Handle<Array> a = Array::New(len);
+  for (int i = 0; i < len; i++) {
+    a->Set(i, readValue());
+  }
+  return a;
 }
 
 Handle<Value> Deserializer::readObject() {
