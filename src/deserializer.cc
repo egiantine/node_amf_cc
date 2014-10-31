@@ -121,11 +121,11 @@ Handle<String> Deserializer::readUTF8() {
 
   // TODO: string refs
   int32_t len = n >> 1;
-  uint16_t* str = NULL;
+  uint8_t* str = NULL;
   if (!buffer_->read(&str, len)) {
     die("String expected but not long enough");
   }
-  return String::New(str, len);
+  return String::New(reinterpret_cast<char*>(str), len);
 }
 
 Handle<Array> Deserializer::readArray() {

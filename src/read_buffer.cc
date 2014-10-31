@@ -8,14 +8,22 @@
 using namespace v8;
 
 namespace {
-const static uint16_t ENCODED_NAN[] = {  0, 0, 0, 0, 0, 0, 0xf8, 0x7f };
+const static uint8_t ENCODED_NAN[] = {  0, 0, 0, 0, 0, 0, 0xf8, 0x7f };
 }  // end namespace
 
 ReadBuffer::ReadBuffer(Handle<String> payload) 
   : big_endian_(isBigEndian()),
-    shorts_(payload->Length()),
-    pos_(0) {
-  payload->Write(shorts_.data());
+    pos_(0),
+    bytes_(payload->Length()) {
+  // v8 uses double byte strings, but our API expects a serialized AMF buffer
+  // where just the lower byte is set, and upper bytes are blank. Discard them
+  // so the layout of the data in memory will be accurate (e.g. encoded UTF8
+  // will be valid again).
+  std::vector<uint16_t> temp(bytes_.size());
+  payload->Write(temp.data());
+  for (uint32_t i = 0; i < temp.size(); ++i) {
+    bytes_[i] = temp[i];
+  }
 }
 
 ReadBuffer::~ReadBuffer() {
@@ -25,14 +33,14 @@ uint32_t ReadBuffer::pos() const {
   return pos_;
 }
 
-bool ReadBuffer::read(uint16_t** dest, int len) {
-  *dest = &shorts_[pos_];
+bool ReadBuffer::read(uint8_t** dest, int len) {
+  *dest = &bytes_[pos_];
   pos_ += len;
-  return (pos_ <= shorts_.size());
+  return (pos_ <= bytes_.size());
 }
 
 bool ReadBuffer::readUInt8(uint8_t* output) {
-  uint16_t* data = NULL;
+  uint8_t* data = NULL;
   if (!read(&data, 1)) return false;
   *output = *data;
   return true;
@@ -43,7 +51,7 @@ bool ReadBuffer::readUInt8(uint8_t* output) {
 
 // _decode_ushort
 bool ReadBuffer::readUInt16(uint16_t* output) {
-  uint16_t* data = NULL;
+  uint8_t* data = NULL;
   if (!read(&data, 2)) return false;
 
   // Put data from byte array into short
@@ -66,7 +74,7 @@ bool ReadBuffer::readUInt16(uint16_t* output) {
 
 // _decode_ulong
 bool ReadBuffer::readUInt32(uint32_t* output) {
-  uint16_t* data = NULL;
+  uint8_t* data = NULL;
   if (!read(&data, 4)) return false;
   
   // Put data from byte array into short
@@ -91,7 +99,7 @@ bool ReadBuffer::readUInt32(uint32_t* output) {
 
 // _decode_double
 bool ReadBuffer::readDouble(double* output) {
-  uint16_t* data = NULL;
+  uint8_t* data = NULL;
   if (!read(&data, 8)) {
     return false;
   }
@@ -130,7 +138,7 @@ bool ReadBuffer::readDouble(double* output) {
 bool ReadBuffer::readInt29(int32_t* output) {
   int32_t result = 0;
   uint32_t byte_cnt = 0;
-  uint16_t* data = NULL;
+  uint8_t* data = NULL;
   if (!read(&data, 1)) return false;
   uint8_t byte = *data;
 

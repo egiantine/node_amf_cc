@@ -16,13 +16,13 @@ class ReadBuffer {
   bool readDouble(double* output);
   bool readInt29(int32_t* output);
 
-  bool read(uint16_t** dest, int len);
+  bool read(uint8_t** dest, int len);
   uint32_t pos() const;
 
  private:
 
   bool big_endian_;
-  std::vector<uint16_t> shorts_;
+  std::vector<uint8_t> bytes_;
   uint32_t pos_;
 }; 
 
