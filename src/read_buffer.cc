@@ -105,10 +105,10 @@ bool ReadBuffer::readDouble(double* output) {
   }
 
   // Special case NaN
-  if (memcmp(data, ENCODED_NAN, sizeof(uint16_t) * 8) == 0) { 
+  if (memcmp(data, ENCODED_NAN, sizeof(ENCODED_NAN)) == 0) { 
     *output = std::numeric_limits<double>::quiet_NaN();
     return true;
-  }
+  } 
 
   // Put bytes from byte array into double
   union aligned {
