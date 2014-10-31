@@ -2,7 +2,7 @@
 "If possible, build it in Javascript."
    - https://kkaefer.com/node-cpp-modules/#benchmark-thread-pool
 */
-#define BUILDING_NODE_EXTENSION
+#define BUILDING_NODE_EXTENSION 1
 #include <math.h>  // isnan
 #include <node.h>
 

@@ -1,4 +1,4 @@
-#define BUILDING_NODE_EXTENSION
+#define BUILDING_NODE_EXTENSION 1
 #include "write_buffer.h"
 
 WriteBuffer::WriteBuffer() {

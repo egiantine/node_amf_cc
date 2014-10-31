@@ -1,4 +1,4 @@
-#define BUILDING_NODE_EXTENSION
+#define BUILDING_NODE_EXTENSION 1
 #include <node.h>
 
 #include "amf.h"
@@ -162,7 +162,7 @@ Handle<Object> Deserializer::readObject() {
     // This is the first time we've seen this object
     Handle<Object> o = Object::New();
 
-    Handle<String> classname = readUTF8();
+    (void)readUTF8();  // object's class name
     Handle<String> key;
 
     while (!(key = readUTF8()).IsEmpty() && key->Length() != 0) {

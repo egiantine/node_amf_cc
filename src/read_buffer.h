@@ -22,8 +22,8 @@ class ReadBuffer {
  private:
 
   bool big_endian_;
-  std::vector<uint8_t> bytes_;
   uint32_t pos_;
+  std::vector<uint8_t> bytes_;
 }; 
 
 #endif  // READ_BUFFER_H

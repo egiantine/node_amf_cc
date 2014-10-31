@@ -1,4 +1,4 @@
-#define BUILDING_NODE_EXTENSION
+#define BUILDING_NODE_EXTENSION 1
 #include <node.h>
 #include "utils.h"
 
