@@ -29,7 +29,7 @@ class Serializer : public node::ObjectWrap {
   void writeUTF8(v8::Handle<v8::String> value, bool writeMarker = false);
   void writeArray(v8::Handle<v8::Array> value);
   void writeObject(v8::Handle<v8::Object> value);
-  bool writeDateIf(v8::Handle<v8::Object> date);
+  void writeDate(v8::Handle<v8::Object> date);
   void writeNumber(v8::Handle<v8::Value>, bool writeMarker = false);
   void writeDouble(v8::Handle<v8::Value>, bool writeMarker = false);
   void writeU8(unsigned char n);

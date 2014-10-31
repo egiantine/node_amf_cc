@@ -94,12 +94,11 @@ void Serializer::writeValue(Handle<Value> value) {
     writeBool(value->ToBoolean());
   } else if (value->IsArray()) {
     writeArray(Handle<Array>(Array::Cast(*value)));
-  } else if (value->IsObject()) {
-    // special object types 
-    if (!writeDateIf(value->ToObject())) {
-      // else write vanilla Object
-      writeObject(value->ToObject());
-    }
+  } else if (value->IsDate()) {
+    writeDate(value->ToObject());
+  } else {
+    // else write vanilla Object
+    writeObject(value->ToObject());
   }
 }
 
@@ -180,10 +179,10 @@ void Serializer::writeObject(Handle<Object> value) {
   writeUTF8(String::Empty());
 }
 
-bool Serializer::writeDateIf(Handle<Object> date) {
+void Serializer::writeDate(Handle<Object> date) {
   Local<Value> getTime = date->Get(String::New("getTime"));
   if (!getTime->IsFunction()) {
-    return false;
+    die("Date doesn't have the getTime property?");
   }
   Local<Function> getTimeFn = Function::Cast(*getTime);
   Local<Value> dateDouble = getTimeFn->Call(date, 0, NULL);
@@ -191,7 +190,6 @@ bool Serializer::writeDateIf(Handle<Object> date) {
   writeU8(AMF::AMF3_DATE);
   writeU29(1);
   writeDouble(dateDouble);
-  return true;
 }
 
 void Serializer::writeNumber(Handle<Value> value, bool writeMarker) {
