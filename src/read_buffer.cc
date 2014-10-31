@@ -27,7 +27,7 @@ bool ReadBuffer::read(uint16_t** dest, int len) {
 bool ReadBuffer::readUInt8(uint8_t* output) {
   uint16_t* data = NULL;
   if (!read(&data, 1)) return false;
-  *output = (uint8_t)(*data);
+  *output = *data;
   return true;
 }
 
@@ -46,11 +46,11 @@ bool ReadBuffer::readUInt16(uint16_t* output) {
   } s;
 
   if (big_endian_) {
-    for (int i = 0; i < 2; ++i) s.c_val[i] = (uint8_t)data[i];
+    for (int i = 0; i < 2; ++i) s.c_val[i] = data[i];
   } else {
     // Flip endianness
-    s.c_val[0] = (uint8_t)data[1];
-    s.c_val[1] = (uint8_t)data[0];
+    s.c_val[0] = data[1];
+    s.c_val[1] = data[0];
   }
 
   *output = s.s_val;  
@@ -69,13 +69,13 @@ bool ReadBuffer::readUInt32(uint32_t* output) {
   } i;
 
   if (big_endian_) {
-    for (int j = 0; j < 4; ++j) i.c_val[j] = (uint8_t)data[j];
+    for (int j = 0; j < 4; ++j) i.c_val[j] = data[j];
   } else {
     // Flip endianness
-    i.c_val[0] = (uint16_t)data[3];
-    i.c_val[1] = (uint16_t)data[2];
-    i.c_val[2] = (uint16_t)data[1];
-    i.c_val[3] = (uint16_t)data[0];
+    i.c_val[0] = data[3];
+    i.c_val[1] = data[2];
+    i.c_val[2] = data[1];
+    i.c_val[3] = data[0];
   }
 
   *output = i.i_val;
@@ -96,7 +96,7 @@ bool ReadBuffer::readDouble(double* output) {
   } d;
 
   if (big_endian_) {
-    for (int i = 0; i < 8; ++i) d.c_val[i] = (uint8_t)data[i];
+    for (int i = 0; i < 8; ++i) d.c_val[i] = data[i];
   } else {
     // Flip endianness
     d.c_val[0] = data[7];
@@ -119,7 +119,7 @@ bool ReadBuffer::readInt29(int32_t* output) {
   uint32_t byte_cnt = 0;
   uint16_t* data = NULL;
   if (!read(&data, 1)) return false;
-  uint8_t byte = (uint8_t)*data;
+  uint8_t byte = *data;
 
     // If 0x80 is set, int includes the next byte, up to 4 total bytes
   while ((byte & 0x80) && (byte_cnt < 3)) {
