@@ -81,6 +81,13 @@ for (var i = 0; i < tests.length; i++) {
     succeeded += 1;
   } catch (e) {
     sys.puts("Serialization error: " + e);
+    if (baselineBuffer.length != experimentBuffer.length) {
+      sys.puts("Baseline len: " + baselineBuffer.length 
+               + " vs. experiment len: " + experimentBuffer.length);
+    } else {
+      dump(baselineBuffer, "baseline");
+      dump(experimentBuffer, "experiment");
+    }
     failed += 1;
   }
 
