@@ -13,7 +13,7 @@ using namespace v8;
 // high bit bug 
 // trigger GC to make sure no leaks
 
-Persistent<Function> Deserializer::constructor;
+Persistent<Function> Deserializer::func;
 
 Deserializer::Deserializer() {
 }
@@ -23,42 +23,20 @@ Deserializer::~Deserializer() {
 
 void Deserializer::Init(Handle<Object> exports) {
   // Prepare constructor template
-  Local<FunctionTemplate> tpl = FunctionTemplate::New(New);
-  tpl->SetClassName(String::NewSymbol("deserializer"));
-  tpl->InstanceTemplate()->SetInternalFieldCount(1);
-  // Prototype
-  tpl->PrototypeTemplate()->Set(String::NewSymbol("deserialize"),
-      FunctionTemplate::New(Deserialize)->GetFunction());
-  constructor = Persistent<Function>::New(tpl->GetFunction());
-  exports->Set(String::NewSymbol("deserializer"), constructor);
+  Local<FunctionTemplate> tpl = FunctionTemplate::New(Run);
+  func = Persistent<Function>::New(tpl->GetFunction());
+  exports->Set(String::NewSymbol("deserialize"), func);
 }
 
-Handle<Value> Deserializer::New(const Arguments& args) {
+Handle<Value> Deserializer::Run(const Arguments& args) {
   HandleScope scope;
 
-  if (args.IsConstructCall()) {
-    // Invoked as constructor: `new Deserializer(...)`
-    Deserializer* obj = new Deserializer();
-    obj->Wrap(args.This());
-
-    return args.This();
-  } else {
-    // Invoked as plain function `Deserializer(...)`, turn into construct call.
-    return scope.Close(constructor->NewInstance());
-  }
-}
-
-Handle<Value> Deserializer::Deserialize(const Arguments& args) {
-  HandleScope scope;
-
-  Deserializer* obj = ObjectWrap::Unwrap<Deserializer>(args.This());
-
- if (args.Length() != 1) {
+  if (args.Length() != 1) {
     die("Need exactly one argument");
   }
  
+  std::auto_ptr<Deserializer> obj(new Deserializer());
   obj->init(args[0]->ToString());
-
   return scope.Close(obj->readValue());
 }
 

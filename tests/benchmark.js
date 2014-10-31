@@ -30,10 +30,12 @@ var jsonData = {};
 });
 
 var deserializers = {
-  //'amflib': function(x) { return amflib.deserializer(x.toString('binary')).readValue(amflib.AMF3); },
+  'amflib': function(x) { return amflib.deserializer(x.toString('binary')).readValue(amflib.AMF3); },
   
-  'amfcc': function(x) { return amfcc.deserializer().deserialize(x.toString('binary')); },
+  'amfcc': function(x) { return amfcc.deserialize(x.toString('binary')); },
 };
+
+//console.log(amflib.deserializer(amfData['in-edit_location'].toString('binary')).readValue(amflib.AMF3));
 
 Object.keys(deserializers).forEach(function (libname) {
   Object.keys(amfData).forEach(function (type) {
@@ -42,15 +44,14 @@ Object.keys(deserializers).forEach(function (libname) {
   });
   suite.add(libname + '/deserialize', function() {
     Object.keys(amfData).forEach(function (type) {
-      console.log(libname + ": " + type);
       (deserializers[libname])(amfData[type]);
     });
   });
 }); 
 
 var serializers = {
-  'amflib': function(x) { return amflib.serializer().writeObject(x); },
-  'amfcc': function(x) { return amfcc.serializer().serialize(x); }
+//  'amflib': function(x) { return amflib.serializer().writeObject(x); },
+//  'amfcc': function(x) { return amfcc.serialize(x); }
 };
 
 Object.keys(serializers).forEach(function (libname) {

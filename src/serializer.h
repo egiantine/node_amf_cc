@@ -9,16 +9,15 @@
 class Serializer : public node::ObjectWrap {
  public:
   static void Init(v8::Handle<v8::Object> exports);
+  ~Serializer();
 
  private:
   Serializer();
-  ~Serializer();
 
   static int bigEndian;
 
-  static v8::Handle<v8::Value> New(const v8::Arguments& args);
-  static v8::Handle<v8::Value> Serialize(const v8::Arguments& args);
-  static v8::Persistent<v8::Function> constructor;
+  static v8::Handle<v8::Value> Run(const v8::Arguments& args);
+  static v8::Persistent<v8::Function> func;
 
   void clear();
 

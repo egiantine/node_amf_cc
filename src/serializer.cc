@@ -18,7 +18,7 @@ const int INSTANCE_NO_TRAITS_NO_EXTERNALIZABLE = 11;
 const uint16_t SERIALIZED_NaN[] = { 0, 0, 0, 0, 0, 0, 248, 127 };
 }
 
-Persistent<Function> Serializer::constructor;
+Persistent<Function> Serializer::func;
 
 int Serializer::bigEndian = 0;
 
@@ -32,41 +32,21 @@ Serializer::~Serializer() {
 void Serializer::Init(Handle<Object> exports) {
   bigEndian = isBigEndian();
 
-  // Prepare constructor template
-  Local<FunctionTemplate> tpl = FunctionTemplate::New(New);
-  tpl->SetClassName(String::NewSymbol("serializer"));
-  tpl->InstanceTemplate()->SetInternalFieldCount(1);
-  // Prototype
-  tpl->PrototypeTemplate()->Set(String::NewSymbol("serialize"),
-      FunctionTemplate::New(Serialize)->GetFunction());
-  constructor = Persistent<Function>::New(tpl->GetFunction());
-  exports->Set(String::NewSymbol("serializer"), constructor);
+  // Prepare func template
+  Local<FunctionTemplate> tpl = FunctionTemplate::New(Run);
+  func = Persistent<Function>::New(tpl->GetFunction());
+  exports->Set(String::NewSymbol("serialize"), func);
 }
 
-Handle<Value> Serializer::New(const Arguments& args) {
+Handle<Value> Serializer::Run(const Arguments& args) {
   HandleScope scope;
-
-  if (args.IsConstructCall()) {
-    // Invoked as constructor: `new Serializer(...)`
-    Serializer* obj = new Serializer();
-    obj->Wrap(args.This());
-    return args.This();
-  } else {
-    // Invoked as plain function `Serializer(...)`, turn into construct call.
-    return scope.Close(constructor->NewInstance());
-  }
-}
-
-Handle<Value> Serializer::Serialize(const Arguments& args) {
-  HandleScope scope;
-
-  Serializer* obj = ObjectWrap::Unwrap<Serializer>(args.This());
 
   if (args.Length() != 1) {
     die("Need exactly one argument");
   }
-  obj->writeValue(args[0]);
 
+  std::auto_ptr<Serializer> obj(new Serializer()); 
+  obj->writeValue(args[0]);
   return scope.Close(obj->buffer_.toString());
 }
 

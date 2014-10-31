@@ -74,7 +74,7 @@ for (var i = 0; i < tests.length; i++) {
   sys.puts( ' > ' + descr + ': ' + sanitize(value));
 
   // Test serialization using amflib as baseline.
-  var experimentBuffer = amfcc.serializer().serialize(value);
+  var experimentBuffer = amfcc.serialize(value);
   var baselineBuffer = amflib.serializer().writeValue(value);
   try {
     experimentBuffer.should.be.exactly(baselineBuffer);  
@@ -86,7 +86,7 @@ for (var i = 0; i < tests.length; i++) {
 
   // Test deserialization using original value as baseline.
   var baselineValue = amflib.deserializer(baselineBuffer).readValue(amflib.AMF3);
-  var experimentValue = amfcc.deserializer().deserialize(baselineBuffer);
+  var experimentValue = amfcc.deserialize(baselineBuffer);
 
   try {
     if (descr == "Number.NaN") {
