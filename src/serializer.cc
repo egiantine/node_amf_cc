@@ -137,7 +137,6 @@ void Serializer::writeObject(Handle<Object> value) {
   if (value->HasRealNamedProperty(String::New("type"))) {
     writeUTF8(value->Get(String::New("type"))->ToString());
   } else {
-  // TODO declare string constants as static
     writeUTF8(String::New("Object")); 
   } 
 
