@@ -1,7 +1,22 @@
 node-amf-cc
 ===========
 
+C++ implementation of the [AMF 3 specification](http://wwwimages.adobe.com/www.adobe.com/content/dam/Adobe/en/devnet/amf/pdf/amf-file-format-spec.pdf).
+
 Under construction
+
+Still need to implement:
+* traits, dynamic objects
+
+No plans to support:
+* AMF 0 specification
+* XMLDocument Type
+* Associative (ECMA) arrays
+* XML Type 
+* ByteArray type
+* Vector type
+* Dictionary type
+
 
 To compile the addon:
 
