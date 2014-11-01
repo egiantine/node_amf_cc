@@ -12,9 +12,7 @@ const static uint8_t ENCODED_NAN[] = {  0, 0, 0, 0, 0, 0, 0xf8, 0x7f };
 }  // end namespace
 
 ReadBuffer::ReadBuffer(Handle<String> payload) 
-  : big_endian_(isBigEndian()),
-    pos_(0),
-    bytes_(payload->Length()) {
+  : bytes_(payload->Length()) {
   // v8 uses double byte strings, but our API expects a serialized AMF buffer
   // where just the lower byte is set, and upper bytes are blank. Discard them
   // so the layout of the data in memory will be accurate (e.g. encoded UTF8
@@ -24,22 +22,38 @@ ReadBuffer::ReadBuffer(Handle<String> payload)
   for (uint32_t i = 0; i < temp.size(); ++i) {
     bytes_[i] = temp[i];
   }
+
+  region_.big_endian_ = isBigEndian();
+  region_.curr_ = bytes_.data();
+  region_.end_ = bytes_.data() + bytes_.size();
 }
 
 ReadBuffer::~ReadBuffer() {
 }
 
-uint32_t ReadBuffer::pos() const {
-  return pos_;
+ReadBuffer::Region* ReadBuffer::getRegion() {
+  return &region_;
 }
 
-bool ReadBuffer::read(uint8_t** dest, int len) {
-  *dest = &bytes_[pos_];
-  pos_ += len;
-  return (pos_ <= bytes_.size());
+ReadBuffer::Region ReadBuffer::Region::copy(int len) const {
+  Region that = *this;
+  if (len >= 0) {
+    that.end_ = curr_ + len;
+  }
+  return that;
+} 
+
+int ReadBuffer::Region::length() const {
+  return end_ - curr_;
+} 
+
+bool ReadBuffer::Region::read(uint8_t** dest, int len) {
+  *dest = curr_;
+  curr_ += len;
+  return (curr_ <= end_);
 }
 
-bool ReadBuffer::readUInt8(uint8_t* output) {
+bool ReadBuffer::Region::readUInt8(uint8_t* output) {
   uint8_t* data = NULL;
   if (!read(&data, 1)) return false;
   *output = *data;
@@ -50,7 +64,7 @@ bool ReadBuffer::readUInt8(uint8_t* output) {
 // https://code.google.com/p/amfast/source/browse/trunk/amfast/ext_src/decoder.c
 
 // _decode_ushort
-bool ReadBuffer::readUInt16(uint16_t* output) {
+bool ReadBuffer::Region::readUInt16(uint16_t* output) {
   uint8_t* data = NULL;
   if (!read(&data, 2)) return false;
 
@@ -73,7 +87,7 @@ bool ReadBuffer::readUInt16(uint16_t* output) {
 }
 
 // _decode_ulong
-bool ReadBuffer::readUInt32(uint32_t* output) {
+bool ReadBuffer::Region::readUInt32(uint32_t* output) {
   uint8_t* data = NULL;
   if (!read(&data, 4)) return false;
   
@@ -98,7 +112,7 @@ bool ReadBuffer::readUInt32(uint32_t* output) {
 }
 
 // _decode_double
-bool ReadBuffer::readDouble(double* output) {
+bool ReadBuffer::Region::readDouble(double* output) {
   uint8_t* data = NULL;
   if (!read(&data, 8)) {
     return false;
@@ -135,7 +149,7 @@ bool ReadBuffer::readDouble(double* output) {
 }
 
 // _decode_int_AMF3
-bool ReadBuffer::readInt29(int32_t* output) {
+bool ReadBuffer::Region::readInt29(int32_t* output) {
   int32_t result = 0;
   uint32_t byte_cnt = 0;
   uint8_t* data = NULL;

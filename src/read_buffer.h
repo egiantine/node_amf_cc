@@ -5,25 +5,45 @@
 #include <stdint.h>
 #include <vector>
 
+/*
+ * A ReadBuffer maintains an array of bytes.
+ * Scroll through it with a ReadBuffer::Region struct.
+ */
 class ReadBuffer {
  public:
   ReadBuffer(v8::Handle<v8::String> payload);
   ~ReadBuffer();
 
-  bool readUInt8(uint8_t* output);
-  bool readUInt16(uint16_t* output);
-  bool readUInt32(uint32_t* output);
-  bool readDouble(double* output);
-  bool readInt29(int32_t* output);
+  // Structure representing a region of the buffer with start and end pointers.
+  struct Region {
+    // Makes a copy of the region.
+    // If len is shorter than length(), makes a subset copy of the region.
+    Region copy(int len = -1) const;
 
-  bool read(uint8_t** dest, int len);
-  uint32_t pos() const;
+    // Returns length of region
+    int length() const;
+
+    // Destructive functions (shrink region)
+    bool readUInt8(uint8_t* output);
+    bool readUInt16(uint16_t* output);
+    bool readUInt32(uint32_t* output);
+    bool readDouble(double* output);
+    bool readInt29(int32_t* output);
+
+    bool read(uint8_t** dest, int len);
+
+   protected:
+    bool big_endian_;
+    uint8_t* curr_;
+    uint8_t* end_;
+    friend class ReadBuffer;
+  };
+
+  Region* getRegion();
 
  private:
-
-  bool big_endian_;
-  uint32_t pos_;
   std::vector<uint8_t> bytes_;
+  Region region_;
 }; 
 
 #endif  // READ_BUFFER_H

@@ -3,7 +3,6 @@
 
 #include <node.h>
 #include <stdint.h>
-#include <ext/hash_map>
 #include <memory>
 #include "read_buffer.h"
 
@@ -20,15 +19,17 @@ class Deserializer : public node::ObjectWrap {
 
   void init(v8::Handle<v8::String> payload);
 
-  v8::Handle<v8::Value> readValue();
-  v8::Handle<v8::Integer> readInteger();
-  v8::Handle<v8::Number> readDouble();
-  v8::Handle<v8::String> readUTF8();
-  v8::Handle<v8::Array> readArray();
-  v8::Handle<v8::Object> readObject();
-  v8::Handle<v8::Value> readDate();
+  v8::Handle<v8::Value> readValue(ReadBuffer::Region* region);
+  v8::Handle<v8::Value> readDate(ReadBuffer::Region* region);
+  v8::Handle<v8::Array> readArray(ReadBuffer::Region* region);
+  v8::Handle<v8::Number> readDouble(ReadBuffer::Region* region);
+  v8::Handle<v8::String> readUTF8(ReadBuffer::Region* region);
+  v8::Handle<v8::Object> readObject(ReadBuffer::Region* region);
+  v8::Handle<v8::Integer> readInteger(ReadBuffer::Region* region);
 
   std::auto_ptr<ReadBuffer> buffer_;
+  std::vector<v8::Handle<v8::String> > strRefs_;
+  std::vector<v8::Handle<v8::Value> > objRefs_;
 };
 
 #endif  // DESERIALIZER_H
