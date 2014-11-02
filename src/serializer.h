@@ -17,7 +17,6 @@ class Serializer : public node::ObjectWrap {
   static int bigEndian;
 
   static v8::Handle<v8::Value> Run(const v8::Arguments& args);
-  static v8::Persistent<v8::Function> func;
 
   void clear();
 

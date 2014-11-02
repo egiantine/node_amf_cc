@@ -18,8 +18,6 @@ const int INSTANCE_NO_TRAITS_NO_EXTERNALIZABLE = 11;
 const uint16_t SERIALIZED_NaN[] = { 0, 0, 0, 0, 0, 0, 248, 127 };
 }
 
-Persistent<Function> Serializer::func;
-
 int Serializer::bigEndian = 0;
 
 Serializer::Serializer() {
@@ -32,10 +30,8 @@ Serializer::~Serializer() {
 void Serializer::Init(Handle<Object> exports) {
   bigEndian = isBigEndian();
 
-  // Prepare func template
-  Local<FunctionTemplate> tpl = FunctionTemplate::New(Run);
-  func = Persistent<Function>::New(tpl->GetFunction());
-  exports->Set(String::NewSymbol("serialize"), func);
+  exports->Set(String::NewSymbol("serialize"),
+      Persistent<Function>::New(FunctionTemplate::New(Run)->GetFunction()));
 }
 
 Handle<Value> Serializer::Run(const Arguments& args) {
