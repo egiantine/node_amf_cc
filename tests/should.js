@@ -38,6 +38,7 @@ var tests = [
   ['empty array', [] ],
   ['mixed array', [ 1, 'ab', true ] ],
   ['integer array', [ 1, -1, 2, -2, 3, -3, 4, -4, 5, -5 ] ],
+  ['string array', [ 'foo', 'foo', 'foo' ] ],
   ['sparse array', [undefined,undefined,undefined,undefined,undefined,undefined] ],
   ['multi-dimensional array',  [[[],[]],[],] ],
   // special objects
@@ -46,7 +47,8 @@ var tests = [
   // plain objects
   ['empty object', {} ],
   ['keyed object', { foo:'bar', 'foo bar':'baz' } ],
-  ['refs object', { foo: _ = { a: 12 }, bar: _ } ]
+  ['refs object', { foo: _ = { a: 12 }, bar: _ } ],
+  ['glitch object', { msg_id: '8', location: { r: 3000, tsid: 'LLIER' } } ],
 ];
 
 
