@@ -12,8 +12,6 @@ using namespace v8;
 // TODO: die() takes formatstr
 // TODO: trigger GC to make sure no leaks
 
-Persistent<Function> Deserializer::func;
-
 Deserializer::Deserializer() {
 }
 
@@ -21,10 +19,8 @@ Deserializer::~Deserializer() {
 }
 
 void Deserializer::Init(Handle<Object> exports) {
-  // Prepare constructor template
-  Local<FunctionTemplate> tpl = FunctionTemplate::New(Run);
-  func = Persistent<Function>::New(tpl->GetFunction());
-  exports->Set(String::NewSymbol("deserialize"), func);
+  exports->Set(String::NewSymbol("deserialize"),
+      Persistent<Function>::New(FunctionTemplate::New(Run)->GetFunction()));
 }
 
 Handle<Value> Deserializer::Run(const Arguments& args) {
@@ -46,7 +42,6 @@ void Deserializer::init(Handle<String> payload) {
 Handle<Value> Deserializer::readValue(ReadBuffer::Region* region) {
   uint8_t marker = AMF3_UNDEFINED;
   region->readUInt8(&marker);
-  printf("readValue: %d\n", marker);
   switch (marker) {
     case AMF3_UNDEFINED: 
       return Undefined();
@@ -104,24 +99,25 @@ Handle<String> Deserializer::readUTF8(ReadBuffer::Region* region) {
     if (len == 0) {
       return String::New("");
     }
-    uint8_t* str = NULL;
-    if (!region->read(&str, len)) {
-      die("String expected but not long enough");
-    }
-    Handle<String> s = String::New(reinterpret_cast<char*>(str), len);
-
-    std::vector<char> v(s->Utf8Length() + 1);
-    s->WriteUtf8(v.data());
-    printf("UTF8: (%llx) %d:%s\n", (uint64_t)str, len, v.data());
-    strRefs_.push_back(s);
-    return s;
+    strRefs_.push_back(region->copy(len));
   } else {
     uint32_t refIndex = n >> 1;
     if (refIndex >= strRefs_.size()) {
       die("No string reference at index!");
     }
-    return strRefs_[refIndex];
+    region = &strRefs_[refIndex];
+    len = region->length();
   }
+    
+  uint8_t* str = NULL;
+  if (!region->read(&str, len)) {
+    die("String expected but not long enough");
+  }
+  Handle<String> s = String::New(reinterpret_cast<char*>(str), len);
+
+  std::vector<char> v(s->Utf8Length() + 1);
+  s->WriteUtf8(v.data());
+  return s;
 }
 
 Handle<Array> Deserializer::readArray(ReadBuffer::Region* region) {
@@ -141,9 +137,10 @@ Handle<Array> Deserializer::readArray(ReadBuffer::Region* region) {
     for (int i = 0; i < len; i++) {
       a->Set(i, readValue(region));
     }
-    objRefs_.push_back(a);
+  //TODO: how to store len in objRefs array?  objRefs_.push_back(a);
     return a;
   } else {
+/*
     uint32_t refIndex = n >> 1;
     if (refIndex >= objRefs_.size()) {
       die("No object reference at index!");
@@ -153,6 +150,9 @@ Handle<Array> Deserializer::readArray(ReadBuffer::Region* region) {
       die("Object reference was not an array");
     }
     return Handle<Array>(Array::Cast(*v));
+*/
+    return Array::New(0);
+
   }
 }
 
@@ -162,32 +162,27 @@ Handle<Object> Deserializer::readObject(ReadBuffer::Region* region) {
     die("Object attributes not found");
   }
 
-  printf("object flags:%x\n", n);
   if (n & 1) {
-    // This is the first time we've seen this object
-    Handle<Object> o = Object::New();
-  
-    (void)readUTF8(region);  // object's class name
-    Handle<String> key;
-  
-    int i = 0;
-    while (!(key = readUTF8(region)).IsEmpty() && key->Length() != 0) {
-      printf("%d\n", i++);
-      o->Set(key, readValue(region));
+    objRefs_.push_back(region->copy());
+    if (n & 2) {
+      // Restore trait references...
     }
-    objRefs_.push_back(o);
-    return o;
   } else {
+    // Object reference
     uint32_t refIndex = n >> 1;
     if (refIndex >= objRefs_.size()) {
       die("No object reference at index!");
     }
-    Handle<Value> v = objRefs_[refIndex];
-    if (!v->IsObject()) {
-      die("Ref at index is not an object");
-    }
-    return v->ToObject();
+    region = &objRefs_[refIndex];
   }
+  
+  Handle<Object> o = Object::New();
+  (void)readUTF8(region);  // object's class name
+  Handle<String> key;
+  while (!(key = readUTF8(region)).IsEmpty() && key->Length() != 0) {
+    o->Set(key, readValue(region));
+  }
+  return o;
 }
 
 Handle<Value> Deserializer::readDate(ReadBuffer::Region* region) {
@@ -196,20 +191,18 @@ Handle<Value> Deserializer::readDate(ReadBuffer::Region* region) {
     die("Object attributes not found");
   }
   if (n & 1) {
-    double time;
-    if (!region->readDouble(&time)) {
-      die("Time expected");
-    }
-    Handle<Value> o = Date::New(time);
-    objRefs_.push_back(o);
-    return o;
+    objRefs_.push_back(region->copy(8));
   } else {
     uint32_t refIndex = n >> 1;
     if (refIndex >= objRefs_.size()) {
       die("No object reference at index!");
     }
-    return objRefs_[refIndex];
+    region = &objRefs_[refIndex];
   }
-
+  double time;
+  if (!region->readDouble(&time)) {
+    die("Time expected");
+  }
+  return Date::New(time);
 }
 

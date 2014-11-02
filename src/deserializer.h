@@ -15,7 +15,6 @@ class Deserializer : public node::ObjectWrap {
   Deserializer();
 
   static v8::Handle<v8::Value> Run(const v8::Arguments& args);
-  static v8::Persistent<v8::Function> func;
 
   void init(v8::Handle<v8::String> payload);
 
@@ -28,8 +27,8 @@ class Deserializer : public node::ObjectWrap {
   v8::Handle<v8::Integer> readInteger(ReadBuffer::Region* region);
 
   std::auto_ptr<ReadBuffer> buffer_;
-  std::vector<v8::Handle<v8::String> > strRefs_;
-  std::vector<v8::Handle<v8::Value> > objRefs_;
+  std::vector<ReadBuffer::Region> strRefs_;
+  std::vector<ReadBuffer::Region> objRefs_;
 };
 
 #endif  // DESERIALIZER_H
