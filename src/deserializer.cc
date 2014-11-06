@@ -114,9 +114,11 @@ Handle<String> Deserializer::readUTF8(ReadBuffer::Region* region) {
     die("String expected but not long enough");
   }
   Handle<String> s = String::New(reinterpret_cast<char*>(str), len);
-
+#if 1
   std::vector<char> v(s->Utf8Length() + 1);
   s->WriteUtf8(v.data());
+  printf("read string: %s\n", v.data());
+#endif
   return s;
 }
 
@@ -128,33 +130,48 @@ Handle<Array> Deserializer::readArray(ReadBuffer::Region* region) {
 
   if (n & 1) {
     int32_t len = n >> 1;
-    // Skip the associative portion of the array: unsupported in Javascript
-    while (readUTF8(region)->Length() != 0) {
-      readValue(region);
-    }
-   
-    Handle<Array> a = Array::New(len);
-    for (int i = 0; i < len; i++) {
-      a->Set(i, readValue(region));
-    }
-  //TODO: how to store len in objRefs array?  objRefs_.push_back(a);
-    return a;
+    objRefs_.push_back(makeRef(region->copy(), len));
+    return readArrayWithLength(region, len);
   } else {
-/*
     uint32_t refIndex = n >> 1;
     if (refIndex >= objRefs_.size()) {
       die("No object reference at index!");
     }
-    Handle<Value> v = objRefs_[refIndex];
-    if (!v->IsArray()) {
-      die("Object reference was not an array");
-    }
-    return Handle<Array>(Array::Cast(*v));
-*/
-    return Array::New(0);
-
+    ObjRef ref = objRefs_[refIndex];
+    return readArrayWithLength(&ref.region, ref.attr);
   }
 }
+
+Handle<Array> Deserializer::readArrayWithLength(
+    ReadBuffer::Region* region, int32_t len) {
+  // Skip the associative portion of the array: unsupported in Javascript
+  while (readUTF8(region)->Length() != 0) {
+    readValue(region);
+  }
+ 
+  Handle<Array> a = Array::New(len);
+  for (int i = 0; i < len; i++) {
+    a->Set(i, readValue(region));
+  }
+  return a;
+}
+
+inline bool isObjectReferenceFlag(int32_t n) {
+  return ((n & 1) == 0);
+}
+
+inline bool isTraitReferenceFlag(int32_t n) {
+  return ((n & 3) == 1); 
+}
+
+inline bool isTraitDeclarationFlag(int32_t n) {
+  return((n & 7) == 3);
+}
+
+inline bool isExternalizableTraitFlag(int32_t n) {
+  return ((n & 7) == 7);
+}
+
 
 Handle<Object> Deserializer::readObject(ReadBuffer::Region* region) {
   int32_t n = 0;
@@ -162,25 +179,75 @@ Handle<Object> Deserializer::readObject(ReadBuffer::Region* region) {
     die("Object attributes not found");
   }
 
-  if (n & 1) {
-    objRefs_.push_back(region->copy());
-    if (n & 2) {
-      // Restore trait references...
-    }
-  } else {
-    // Object reference
+  printf("n=%d\n", n & 7);
+  if (isObjectReferenceFlag(n)) {
+    // Reconstruct object reference ad re-parse it.
     uint32_t refIndex = n >> 1;
     if (refIndex >= objRefs_.size()) {
       die("No object reference at index!");
     }
-    region = &objRefs_[refIndex];
-  }
-  
-  Handle<Object> o = Object::New();
-  (void)readUTF8(region);  // object's class name
+    ObjRef ref = objRefs_[refIndex];
+    return readObjectWithFlag(&ref.region, ref.attr);
+  } else {
+    objRefs_.push_back(makeRef(region->copy(), n));
+    return readObjectWithFlag(region, n);
+  } 
+}
+
+Handle<Object> Deserializer::readObjectWithFlag(
+    ReadBuffer::Region* region, int32_t n) {
+  if (isObjectReferenceFlag(n)) {
+    die("Fatal error - obect reference flag passed to readObjectWithFlag");
+  } else if (isExternalizableTraitFlag(n)) {
+    die("Externalizable traits not supported!");
+  } else if (isTraitDeclarationFlag(n)) {
+    printf("trait declaration flag\n");
+    Traits traits;
+    traits.dynamic = (n & 8) ? true : false;
+    (void)readUTF8(region);  // classname
+    int32_t num_props = n >> 4;
+    for (int i = 0; i < num_props; i++) {
+      traits.props.push_back(readUTF8(region));
+    }
+    printf("num props %d\n", num_props);
+    traitRefs_.push_back(traits); 
+    return readObjectFromRegionAndTraits(region, traits);
+  } else if (isTraitReferenceFlag(n)) {
+    uint32_t refIndex = n >> 2;
+    printf("refindex=%d\n", refIndex);
+    if (refIndex >= traitRefs_.size()) {
+      die("No trait reference at index!");
+    }
+    Traits traits = traitRefs_[refIndex];
+    return readObjectFromRegionAndTraits(region, traits);
+  } else {
+    die("Unrecognized flag!"); 
+  } 
+}
+
+void Deserializer::readObjectDynamicProps(
+    ReadBuffer::Region* region, Handle<Object> o) {
   Handle<String> key;
   while (!(key = readUTF8(region)).IsEmpty() && key->Length() != 0) {
     o->Set(key, readValue(region));
+  } 
+}
+
+Handle<Object> Deserializer::readObjectFromRegion(ReadBuffer::Region* region) {
+  Handle<Object> o = Object::New();
+  (void)readUTF8(region);  // object's class name
+  readObjectDynamicProps(region, o);
+  return o;
+}
+
+Handle<Object> Deserializer::readObjectFromRegionAndTraits(
+    ReadBuffer::Region* region, const Traits& traits) {
+  Handle<Object> o = Object::New();
+  for (Handle<String> key : traits.props) {
+    o->Set(key, readValue(region));
+  }
+  if (traits.dynamic) {
+    readObjectDynamicProps(region, o);
   }
   return o;
 }
@@ -191,13 +258,13 @@ Handle<Value> Deserializer::readDate(ReadBuffer::Region* region) {
     die("Object attributes not found");
   }
   if (n & 1) {
-    objRefs_.push_back(region->copy(8));
+    objRefs_.push_back(makeRef(region->copy(8), 0));
   } else {
     uint32_t refIndex = n >> 1;
     if (refIndex >= objRefs_.size()) {
       die("No object reference at index!");
     }
-    region = &objRefs_[refIndex];
+    region = &objRefs_[refIndex].region;
   }
   double time;
   if (!region->readDouble(&time)) {
@@ -205,4 +272,16 @@ Handle<Value> Deserializer::readDate(ReadBuffer::Region* region) {
   }
   return Date::New(time);
 }
+
+Deserializer::ObjRef::ObjRef() : attr(0) { }
+
+Deserializer::ObjRef Deserializer::makeRef(
+    ReadBuffer::Region region, int32_t attr) {
+  ObjRef ref;
+  ref.region = region;
+  ref.attr = attr;
+  return ref;
+}
+
+Deserializer::Traits::Traits() : dynamic(false) { }
 
