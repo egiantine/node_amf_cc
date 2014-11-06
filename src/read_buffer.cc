@@ -48,7 +48,7 @@ int ReadBuffer::Region::length() const {
 } 
 
 bool ReadBuffer::Region::read(uint8_t** dest, int len) {
-  *dest = curr_;
+  if (dest) *dest = curr_;
   curr_ += len;
   return (curr_ <= end_);
 }

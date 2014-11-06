@@ -46,4 +46,7 @@ class ReadBuffer {
   Region region_;
 }; 
 
+typedef ReadBuffer::Region ReadRegion;
+
+
 #endif  // READ_BUFFER_H
