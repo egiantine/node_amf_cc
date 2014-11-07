@@ -215,7 +215,8 @@ Handle<Object> Deserializer::readObjectWithFlag(
     return readObjectFromRegionAndTraits(region, traits);
   } else {
     die("Unrecognized flag!"); 
-  } 
+  }
+  return Object::New();  // workaround compiler warning. We'll never get here. 
 }
 
 void Deserializer::readObjectDynamicProps(
@@ -236,8 +237,8 @@ Handle<Object> Deserializer::readObjectFromRegion(ReadBuffer::Region* region) {
 Handle<Object> Deserializer::readObjectFromRegionAndTraits(
     ReadBuffer::Region* region, const Traits& traits) {
   Handle<Object> o = Object::New();
-  for (Handle<String> key : traits.props) {
-    o->Set(key, readValue(region));
+  for (uint i = 0; i < traits.props.size(); i++) {
+    o->Set(traits.props[i], readValue(region));
   }
   if (traits.dynamic) {
     readObjectDynamicProps(region, o);
