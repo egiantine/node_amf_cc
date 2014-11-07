@@ -8,6 +8,7 @@
 using namespace AMF;
 using namespace v8;
 
+// TODO: clean up obj ref hacks to make it more readable; temp stack var is ugly
 // TODO: way better error messages
 // TODO: die() takes formatstr
 // TODO: trigger GC to make sure no leaks
@@ -105,7 +106,8 @@ Handle<String> Deserializer::readUTF8(ReadBuffer::Region* region) {
     if (refIndex >= strRefs_.size()) {
       die("No string reference at index!");
     }
-    region = &strRefs_[refIndex];
+    ReadRegion temp = strRefs_[refIndex].copy();
+    region = &temp;
     len = region->length();
   }
     
@@ -114,11 +116,6 @@ Handle<String> Deserializer::readUTF8(ReadBuffer::Region* region) {
     die("String expected but not long enough");
   }
   Handle<String> s = String::New(reinterpret_cast<char*>(str), len);
-#if 1
-  std::vector<char> v(s->Utf8Length() + 1);
-  s->WriteUtf8(v.data());
-  printf("read string: %s\n", v.data());
-#endif
   return s;
 }
 
@@ -179,7 +176,6 @@ Handle<Object> Deserializer::readObject(ReadBuffer::Region* region) {
     die("Object attributes not found");
   }
 
-  printf("n=%d\n", n & 7);
   if (isObjectReferenceFlag(n)) {
     // Reconstruct object reference ad re-parse it.
     uint32_t refIndex = n >> 1;
@@ -201,7 +197,6 @@ Handle<Object> Deserializer::readObjectWithFlag(
   } else if (isExternalizableTraitFlag(n)) {
     die("Externalizable traits not supported!");
   } else if (isTraitDeclarationFlag(n)) {
-    printf("trait declaration flag\n");
     Traits traits;
     traits.dynamic = (n & 8) ? true : false;
     (void)readUTF8(region);  // classname
@@ -209,12 +204,10 @@ Handle<Object> Deserializer::readObjectWithFlag(
     for (int i = 0; i < num_props; i++) {
       traits.props.push_back(readUTF8(region));
     }
-    printf("num props %d\n", num_props);
     traitRefs_.push_back(traits); 
     return readObjectFromRegionAndTraits(region, traits);
   } else if (isTraitReferenceFlag(n)) {
     uint32_t refIndex = n >> 2;
-    printf("refindex=%d\n", refIndex);
     if (refIndex >= traitRefs_.size()) {
       die("No trait reference at index!");
     }
@@ -264,7 +257,8 @@ Handle<Value> Deserializer::readDate(ReadBuffer::Region* region) {
     if (refIndex >= objRefs_.size()) {
       die("No object reference at index!");
     }
-    region = &objRefs_[refIndex].region;
+    ReadRegion temp = objRefs_[refIndex].region.copy();
+    region = &temp;
   }
   double time;
   if (!region->readDouble(&time)) {
