@@ -1,6 +1,6 @@
 {
   "name": "node_amf_cc",
-  "version": "v1.0.0",
+  "version": "v1.0.1",
   "scripts" : {
       "preinstall" : "node-gyp configure && node-gyp build",
       "preuninstall" : "rm -rf build/*"
@@ -8,7 +8,7 @@
   "main" : "build/Release/node_amf_cc.node",
   "repository" : {
       "type" : "git",
-      "url" : "https://github.com/egiantine/node-amf-cc.git"
+      "url" : "https://github.com/egiantine/node_amf_cc.git"
   },
   "description" : "Fast native C++ implementation of AMF (AMF3 only).",
   "author": {
