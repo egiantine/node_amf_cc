@@ -3,11 +3,14 @@
  */
 
 var suite = new (require('benchmark')).Suite;  // npm install benchmark
+var SegfaultHandler = require('segfault-handler');
 var sys = require('sys');
 var fs = require('fs');
 
 var amfcc = require('../build/Release/node_amf_cc');
 var amflib = require('amflib/node-amf/amf');  // npm install amflib
+
+SegfaultHandler.registerHandler();
 
 // load test fixtures
 var amfData = {};
@@ -35,7 +38,7 @@ var deserializers = {
   'amfcc': function(x) { return amfcc.deserialize(x.toString('binary')); },
 };
 
-//console.log(amflib.deserializer(amfData['in-edit_location'].toString('binary')).readValue(amflib.AMF3));
+console.log(amflib.deserializer(amfData['in-edit_location'].toString('binary')).readValue(amflib.AMF3));
 
 Object.keys(deserializers).forEach(function (libname) {
   Object.keys(amfData).forEach(function (type) {
@@ -50,8 +53,8 @@ Object.keys(deserializers).forEach(function (libname) {
 }); 
 
 var serializers = {
-//  'amflib': function(x) { return amflib.serializer().writeObject(x); },
-//  'amfcc': function(x) { return amfcc.serialize(x); }
+  'amflib': function(x) { return amflib.serializer().writeObject(x); },
+  'amfcc': function(x) { return amfcc.serialize(x); }
 };
 
 Object.keys(serializers).forEach(function (libname) {
