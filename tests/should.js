@@ -7,7 +7,8 @@ var sys = require('sys');
 var amfcc = require('../build/Release/node_amf_cc');
 
 var amflib = require('amflib/node-amf/amf');  // npm install amflib
-
+var SegfaultHandler = require('segfault-handler');
+SegfaultHandler.registerHandler();
 
 // data types to test with human-readable description
 var tests = [
