@@ -6,16 +6,6 @@ NodeJS addon written in C++ which implements the [AMF 3 specification](http://ww
 
 Written as part of the [Eleven Giants](https://github.com/ElevenGiants) project.
 
-No plans to support:
-* AMF 0 specification
-* XMLDocument Type
-* Associative (ECMA) arrays
-* XML Type 
-* ByteArray type
-* Vector type
-* Dictionary type
-* Externalizable traits (variant of Object type)
-
 Installation:
 
     npm install node_amf_cc
@@ -27,7 +17,14 @@ Usage:
     var encoded = amfcc.serialize({foo: 'bar'});
     console.log(amfcc.deserialize(encoded));
 
-To compile the addon:
+Benchmark results from my machine focusing on tail payloads:
+
+    amflib/deserialize x 4.29 ops/sec ±2.02% (15 runs sampled)
+    amfcc/deserialize x 42.70 ops/sec ±2.37% (57 runs sampled)
+    amflib/serialize x 2.71 ops/sec ±2.26% (11 runs sampled)
+    amfcc/serialize x 41.40 ops/sec ±3.30% (56 runs sampled)
+
+To compile the addon from source:
 
     $ node-gyp configure
     $ node-gyp build
@@ -42,10 +39,14 @@ To run benchmarks:
     $ npm install amflib benchmark segfault-handler
     $ node tests/benchmark.js
 
-Benchmark results from my machine focusing on tail payloads:
+No plans to support:
+* AMF 0 specification
+* XMLDocument Type
+* Associative (ECMA) arrays
+* XML Type 
+* ByteArray type
+* Vector type
+* Dictionary type
+* Externalizable traits (variant of Object type)
 
-    amflib/deserialize x 4.29 ops/sec ±2.02% (15 runs sampled)
-    amfcc/deserialize x 42.70 ops/sec ±2.37% (57 runs sampled)
-    amflib/serialize x 2.71 ops/sec ±2.26% (11 runs sampled)
-    amfcc/serialize x 41.40 ops/sec ±3.30% (56 runs sampled)
 
