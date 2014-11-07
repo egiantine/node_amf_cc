@@ -38,8 +38,6 @@ var deserializers = {
   'amfcc': function(x) { return amfcc.deserialize(x.toString('binary')); },
 };
 
-console.log(amflib.deserializer(amfData['in-edit_location'].toString('binary')).readValue(amflib.AMF3));
-
 Object.keys(deserializers).forEach(function (libname) {
   Object.keys(amfData).forEach(function (type) {
     // Debug what's working
