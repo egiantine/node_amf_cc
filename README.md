@@ -1,12 +1,10 @@
-node-amf-cc
+node_amf_cc
 ===========
+https://www.npmjs.org/package/node_amf_cc
 
-C++ implementation of the [AMF 3 specification](http://wwwimages.adobe.com/www.adobe.com/content/dam/Adobe/en/devnet/amf/pdf/amf-file-format-spec.pdf).
+NodeJS addon written in C++ which implements the [AMF 3 specification](http://wwwimages.adobe.com/www.adobe.com/content/dam/Adobe/en/devnet/amf/pdf/amf-file-format-spec.pdf).  This implements nearly all the AMF3 features of [amflib](https://www.npmjs.org/package/amflib) but with at least an order of magnitude better performance for long tail payloads.
 
-Under construction
-
-Still need to implement:
-* traits, dynamic objects
+Written as part of the [Eleven Giants](https://github.com/ElevenGiants) project.
 
 No plans to support:
 * AMF 0 specification
@@ -16,7 +14,18 @@ No plans to support:
 * ByteArray type
 * Vector type
 * Dictionary type
+* Externalizable traits (variant of Object type)
 
+Installation:
+
+    npm install node_amf_cc
+
+Usage:
+
+    var amfcc = require('node_amf_cc');
+
+    var encoded = amfcc.serialize({foo: 'bar'});
+    console.log(amfcc.deserialize(encoded));
 
 To compile the addon:
 
@@ -30,13 +39,13 @@ To run feature tests:
 
 To run benchmarks:
 
-    $ npm install amflib benchmark
+    $ npm install amflib benchmark segfault-handler
     $ node tests/benchmark.js
 
-Preliminary benchmark results (omitting unimplemented features):
+Benchmark results from my machine focusing on tail payloads:
 
-    amflib/deserialize x 9.09 ops/sec ±2.26% (27 runs sampled)
-    amfcc/deserialize x 43.88 ops/sec ±5.08% (57 runs sampled)
-    amflib/serialize x 2.38 ops/sec ±7.85% (10 runs sampled)
-    amfcc/serialize x 24.56 ops/sec ±8.42% (34 runs sampled)
+    amflib/deserialize x 4.29 ops/sec ±2.02% (15 runs sampled)
+    amfcc/deserialize x 42.70 ops/sec ±2.37% (57 runs sampled)
+    amflib/serialize x 2.71 ops/sec ±2.26% (11 runs sampled)
+    amfcc/serialize x 41.40 ops/sec ±3.30% (56 runs sampled)
 
