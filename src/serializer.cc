@@ -15,7 +15,7 @@ using namespace v8;
 namespace {
 const int INSTANCE_NO_TRAITS_NO_EXTERNALIZABLE = 11;
 
-const uint16_t SERIALIZED_NaN[] = { 0, 0, 0, 0, 0, 0, 248, 127 };
+const uint8_t SERIALIZED_NaN[] = { 0, 0, 0, 0, 0, 0, 248, 127 };
 }
 
 int Serializer::bigEndian = 0;
@@ -185,7 +185,7 @@ void Serializer::writeDouble(Handle<Value> value, bool writeMarker) {
   }
   double doubleValue = value->NumberValue();
   if (isnan(doubleValue)) {
-    for (uint i = 0; i < ARRAYSIZE(SERIALIZED_NaN); ++i) {
+    for (uint i = 0; i < sizeof(SERIALIZED_NaN); ++i) {
       writeU8(SERIALIZED_NaN[i]);
     }
     return;
