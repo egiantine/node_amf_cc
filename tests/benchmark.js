@@ -35,7 +35,7 @@ var jsonData = {};
 var deserializers = {
   'amflib': function(x) { return amflib.deserializer(x.toString('binary')).readValue(amflib.AMF3); },
   
-  'amfcc': function(x) { return amfcc.deserialize(x.toString('binary')); },
+  'amfcc': function(x) { return amfcc.deserialize(x.toString('binary')).value; },
 };
 
 Object.keys(deserializers).forEach(function (libname) {

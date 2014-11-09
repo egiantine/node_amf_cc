@@ -15,7 +15,9 @@ Usage:
     var amfcc = require('node_amf_cc');
 
     var encoded = amfcc.serialize({foo: 'bar'});
-    console.log(amfcc.deserialize(encoded));
+    var decoded = amfcc.deserialize(encoded);
+    console.log(decoded.value);  // prints {foo: 'bar'}
+    console.log(decoded.consumed);  
 
 Benchmark results from my machine focusing on tail payloads:
 

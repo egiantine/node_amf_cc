@@ -33,7 +33,12 @@ Handle<Value> Deserializer::Run(const Arguments& args) {
  
   std::auto_ptr<Deserializer> obj(new Deserializer());
   obj->init(args[0]->ToString());
-  return scope.Close(obj->readValue(obj->buffer_->getRegion()));
+  Handle<Object> returnValue = Object::New();
+  returnValue->Set(String::New("value"), 
+      obj->readValue(obj->buffer_->getRegion()));
+  returnValue->Set(String::New("consumed"), 
+      Integer::New(obj->buffer_->getRegion()->consumed())); 
+  return scope.Close(returnValue);
 }
 
 void Deserializer::init(Handle<String> payload) {
@@ -115,7 +120,7 @@ Handle<String> Deserializer::readUTF8(ReadRegion* region) {
       die("No string reference at index!");
     }
     ReadRegion temp = strRefs_[refIndex].copy();
-    return toString(&temp, temp.length());
+    return toString(&temp, temp.remainingLength());
   }
 }
 

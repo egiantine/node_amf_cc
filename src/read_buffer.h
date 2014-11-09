@@ -17,11 +17,14 @@ class ReadBuffer {
   // Structure representing a region of the buffer with start and end pointers.
   struct Region {
     // Makes a copy of the region.
-    // If len is shorter than length(), makes a subset copy of the region.
+    // If len is shorter than remainingLength(), copies a subset of the region.
     Region copy(int len = -1) const;
 
-    // Returns length of region
-    int length() const;
+    // Returns number of bytes consumed
+    int consumed() const;
+
+    // Returns length of region remaining to consume
+    int remainingLength() const;
 
     // Destructive functions (shrink region)
     bool readUInt8(uint8_t* output);
@@ -34,6 +37,7 @@ class ReadBuffer {
 
    protected:
     bool big_endian_;
+    uint8_t* start_;
     uint8_t* curr_;
     uint8_t* end_;
     friend class ReadBuffer;

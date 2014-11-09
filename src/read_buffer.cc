@@ -24,6 +24,7 @@ ReadBuffer::ReadBuffer(Handle<String> payload)
   }
 
   region_.big_endian_ = isBigEndian();
+  region_.start_ = bytes_.data();
   region_.curr_ = bytes_.data();
   region_.end_ = bytes_.data() + bytes_.size();
 }
@@ -41,9 +42,13 @@ ReadBuffer::Region ReadBuffer::Region::copy(int len) const {
     that.end_ = curr_ + len;
   }
   return that;
+}
+
+int ReadBuffer::Region::consumed() const {
+  return curr_ - start_;
 } 
 
-int ReadBuffer::Region::length() const {
+int ReadBuffer::Region::remainingLength() const {
   return end_ - curr_;
 } 
 

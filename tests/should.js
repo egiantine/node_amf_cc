@@ -96,7 +96,7 @@ for (var i = 0; i < tests.length; i++) {
 
   // Test deserialization using original value as baseline.
   var baselineValue = amflib.deserializer(baselineBuffer).readValue(amflib.AMF3);
-  var experimentValue = amfcc.deserialize(baselineBuffer);
+  var experimentValue = amfcc.deserialize(baselineBuffer).value;
 
   try {
     if (descr == "Number.NaN") {
