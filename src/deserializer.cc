@@ -87,36 +87,36 @@ Handle<Number> Deserializer::readDouble(ReadBuffer::Region* region) {
   return Number::New(v);
 }
 
-Handle<String> Deserializer::readUTF8(ReadBuffer::Region* region) {
+Handle<String> toString(ReadRegion* region, int32_t len) {
+  uint8_t* str = NULL;
+  if (!region->read(&str, len)) {
+    die("String expected but not long enough");
+  }
+  return String::New(reinterpret_cast<char*>(str), len);
+}
+
+Handle<String> Deserializer::readUTF8(ReadRegion* region) {
   int32_t n = 0;
   if (!region->readInt29(&n)) {
     die("String expected but no length information found");
   }
 
-  int32_t len;
   if (n & 1) {
-    len = n >> 1;
+    int32_t len = n >> 1;
     // index string unless empty
     if (len == 0) {
       return String::New("");
     }
     strRefs_.push_back(region->copy(len));
+    return toString(region, len);
   } else {
     uint32_t refIndex = n >> 1;
     if (refIndex >= strRefs_.size()) {
       die("No string reference at index!");
     }
     ReadRegion temp = strRefs_[refIndex].copy();
-    region = &temp;
-    len = region->length();
+    return toString(&temp, temp.length());
   }
-    
-  uint8_t* str = NULL;
-  if (!region->read(&str, len)) {
-    die("String expected but not long enough");
-  }
-  Handle<String> s = String::New(reinterpret_cast<char*>(str), len);
-  return s;
 }
 
 Handle<Array> Deserializer::readArray(ReadBuffer::Region* region) {
