@@ -12,7 +12,7 @@ const static uint8_t ENCODED_NAN[] = {  0, 0, 0, 0, 0, 0, 0xf8, 0x7f };
 }  // end namespace
 
 ReadBuffer::ReadBuffer(Handle<String> payload) 
-  : bytes_(payload->Length()) {
+  : bytes_(payload->Length() + 1) {
   // v8 uses double byte strings, but our API expects a serialized AMF buffer
   // where just the lower byte is set, and upper bytes are blank. Discard them
   // so the layout of the data in memory will be accurate (e.g. encoded UTF8
