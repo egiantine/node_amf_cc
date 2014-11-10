@@ -1,4 +1,5 @@
 #define BUILDING_NODE_EXTENSION 1
+#define DEBUG 0
 #include <node.h>
 
 #include "amf.h"
@@ -48,6 +49,9 @@ void Deserializer::init(Handle<String> payload) {
 Handle<Value> Deserializer::readValue(ReadBuffer::Region* region) {
   uint8_t marker = AMF3_UNDEFINED;
   region->readUInt8(&marker);
+#if DEBUG
+  printf("marker=%d\n", marker);
+#endif 
   switch (marker) {
     case AMF3_UNDEFINED: 
       return Undefined();
@@ -97,6 +101,9 @@ Handle<String> toString(ReadRegion* region, int32_t len) {
   if (!region->read(&str, len)) {
     die("String expected but not long enough");
   }
+#if DEBUG
+  printf("utf8=%.*s\n", len, (char*)str); 
+#endif
   return String::New(reinterpret_cast<char*>(str), len);
 }
 
