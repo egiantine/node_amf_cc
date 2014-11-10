@@ -72,9 +72,12 @@ void Serializer::writeValue(Handle<Value> value) {
     writeArray(Handle<Array>(Array::Cast(*value)));
   } else if (value->IsDate()) {
     writeDate(value->ToObject());
-  } else {
+  } else if (value->IsObject()) {
     // else write vanilla Object
     writeObject(value->ToObject());
+  } else {
+    // Unknown type. TODO: error?
+    writeUndefined();
   }
 }
 
