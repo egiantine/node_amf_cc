@@ -171,7 +171,9 @@ void Serializer::writeNumber(Handle<Value> value, bool writeMarker) {
   Local<Integer> integer = value->ToInteger();
   if (!integer->IsNull()) {
     int64_t val = integer->Value();
-    if (val == value->NumberValue() && val >= 0 && val < 0x20000000) {
+    // NOTE: writing large integers as doubles due to https://github.com/timwhitlock/node-amf/issues/10
+    // original largest size was 0x20000000
+    if (val == value->NumberValue() && val >= 0 && val < 0x00200000) {
       writeU29(val, writeMarker);
       return;
     }
