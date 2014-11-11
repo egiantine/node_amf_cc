@@ -179,10 +179,15 @@ bool ReadBuffer::Region::readInt29(int32_t* output) {
     result |= byte & 0xff;
   }
 
+// The below code is correct (I got it from amfast), but not implemented
+// by Tim Whitlock's amflib, so it causes false diffs.
+// If you're bothered by those diffs, recompile with #define AMFLIB_COMPAT
+#ifndef AMFLIB_COMPAT
   // Move sign bit, since we're converting 29bit->32bit
   if (result & 0x10000000) {
     result -= 0x20000000;
   }
+#endif
   
   *output = result;
   return true;
