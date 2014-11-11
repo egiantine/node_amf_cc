@@ -103,6 +103,7 @@ void Serializer::writeUTF8(Handle<String> value, bool writeMarker) {
 
   std::vector<char> utf8str(encodedLen+1);
   value->WriteUtf8(utf8str.data());
+  //printf("Encoding: [%s] at pos %d\n", utf8str.data(), buffer_.bytes_.size()) ;
   for (int i = 0; i < encodedLen; ++i) {
     writeU8(static_cast<unsigned char>(utf8str.data()[i]));
   }
@@ -143,15 +144,11 @@ void Serializer::writeObject(Handle<Object> value) {
   Local<Array> propertyNames = value->GetPropertyNames();
   for (uint i = 0; i < propertyNames->Length(); i++) {
     Handle<String> propName = propertyNames->Get(i)->ToString();
-    if (!value->HasRealNamedProperty(propName)) {
-      continue;
-    }
-
     Local<Value> propValue = value->Get(propName);
     if (propValue->IsFunction()) {
       continue;
     }
-    writeUTF8(propName->ToString());
+    writeUTF8(propName);
     writeValue(propValue); 
   }
   writeUTF8(String::Empty());
