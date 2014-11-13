@@ -1,5 +1,6 @@
 #define BUILDING_NODE_EXTENSION 1
 
+#include <cstring>
 #include <limits>
 
 #include "read_buffer.h"

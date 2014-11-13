@@ -4,6 +4,7 @@
 */
 #define BUILDING_NODE_EXTENSION 1
 #include <math.h>  // isnan
+#include <memory>
 #include <node.h>
 
 #include "amf.h"
@@ -40,6 +41,9 @@ Handle<Value> Serializer::Run(const Arguments& args) {
   if (args.Length() != 1) {
     die("Need exactly one argument");
   }
+
+  // If argument is not valid, you can validate it by calling JSON.parse(JSON.stringify(args[0])) i.e.
+  // http://stackoverflow.com/questions/15990445/accessing-json-stringify-from-node-js-c-bindings
 
   std::auto_ptr<Serializer> obj(new Serializer()); 
   obj->writeValue(args[0]);
