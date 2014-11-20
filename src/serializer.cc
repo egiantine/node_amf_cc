@@ -3,7 +3,15 @@
    - https://kkaefer.com/node-cpp-modules/#benchmark-thread-pool
 */
 #define BUILDING_NODE_EXTENSION 1
+
+// From https://github.com/json-c/json-c/issues/114
+#ifndef _MSC_VER
 #include <math.h>  // isnan
+#else
+#include <float.h>
+#define isnan _isnan
+#endif
+
 #include <memory>
 #include <node.h>
 
