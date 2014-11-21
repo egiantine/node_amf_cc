@@ -11,6 +11,11 @@
 #include "serializer.h"
 #include "utils.h"
 
+#ifdef _MSC_VER
+#include <float.h>
+#define isnan _isnan
+#endif
+
 using namespace v8;
 
 namespace {
@@ -146,7 +151,7 @@ void Serializer::writeObject(Handle<Object> value) {
 
   // write serializable properties
   Local<Array> propertyNames = value->GetPropertyNames();
-  for (uint i = 0; i < propertyNames->Length(); i++) {
+  for (unsigned int i = 0; i < propertyNames->Length(); i++) {
     Handle<String> propName = propertyNames->Get(i)->ToString();
     Local<Value> propValue = value->Get(propName);
     if (propValue->IsFunction()) {
@@ -191,7 +196,7 @@ void Serializer::writeDouble(Handle<Value> value, bool writeMarker) {
   }
   double doubleValue = value->NumberValue();
   if (isnan(doubleValue)) {
-    for (uint i = 0; i < sizeof(SERIALIZED_NaN); ++i) {
+    for (unsigned int i = 0; i < sizeof(SERIALIZED_NaN); ++i) {
       writeU8(SERIALIZED_NaN[i]);
     }
     return;
