@@ -5,24 +5,13 @@
 #include <stdint.h>
 #include "write_buffer.h"
 
-// from https://gcc.gnu.org/onlinedocs/libstdc++/manual/backwards.html:      
-#ifdef __GNUC__
-#if __GNUC__ < 3
-	#include <hash_map.h>
-	namespace extension { using ::hash_map; }; // inherit globals
+#ifdef _MSC_VER
+#include <hash_map>
+#define hashmap stdext
 #else
-	#include <ext/hash_map>
-	#if __GNUC__ == 3 && __GNUC_MINOR__ == 0
-	  namespace extension = std;               // GCC 3.0
-	#else
-	  namespace extension = ::__gnu_cxx;       // GCC 3.1 and later
-	#endif
+#include <ext/hash_map>
+#define hashmap __gnu_cxx
 #endif
-#else      // ...  there are other compilers, right?
-	namespace extension = std;
-#endif
-
-
 
 class Serializer : public node::ObjectWrap {
  public:
@@ -52,7 +41,7 @@ class Serializer : public node::ObjectWrap {
   void writeU29(int64_t n, bool writeMarker = false);
 
   WriteBuffer buffer_;
-  extension::hash_map<int, int> objRefs_;
+  hashmap::hash_map<int, int> objRefs_;
 };
 
 #endif  // SERIALIZER_H
