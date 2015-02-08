@@ -1,18 +1,21 @@
 {
   "name": "node_amf_cc",
-  "version": "v1.1.0",
-  "scripts" : {
-      "preinstall" : "node-gyp configure && node-gyp build",
-      "preuninstall" : "rm -rf build/*"
+  "version": "v1.1.1",
+  "scripts": {
+    "preinstall": "node-gyp configure && node-gyp build",
+    "preuninstall": "rm -rf build/*"
   },
-  "main" : "build/Release/node_amf_cc.node",
-  "repository" : {
-      "type" : "git",
-      "url" : "https://github.com/egiantine/node_amf_cc.git"
+  "main": "build/Release/node_amf_cc.node",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/egiantine/node_amf_cc.git"
   },
-  "description" : "Fast native C++ implementation of AMF (AMF3 only).",
+  "description": "Fast native C++ implementation of AMF (AMF3 only).",
   "author": {
-      "name" : "EgIantine",
-      "url" : "http://elevengiants.com"
+    "name": "EgIantine",
+    "url": "http://elevengiants.com"
+  },
+  "dependencies": {
+    "nan": "^1.6.2"
   }
 }

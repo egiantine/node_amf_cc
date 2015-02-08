@@ -7,8 +7,6 @@ var sys = require('sys');
 var amfcc = require('../build/Release/node_amf_cc');
 
 var amflib = require('amflib/node-amf/amf');  // npm install amflib
-var SegfaultHandler = require('segfault-handler');
-SegfaultHandler.registerHandler();
 
 // data types to test with human-readable description
 var tests = [
@@ -25,6 +23,8 @@ var tests = [
   ['large integer', 4294967296 ],
   ['large negative integer', -4294967296 ],
   ['small negative integer', -1 ],
+  ['med negative integer', -232 ],
+  ['med positive integer', 536870680 ],
   ['small floating point', 0.123456789 ],
   ['small negative floating point', -0.987654321 ],
   ['Number.MIN_VALUE', Number.MIN_VALUE ],
@@ -48,20 +48,27 @@ var tests = [
   // plain objects
   ['empty object', {} ],
   ['keyed object', { foo:'bar', 'foo bar':'baz' } ],
+  ['int keyed object', { "0":'bar', 1:'baz' } ],
   ['refs object', { foo: _ = { a: 12 }, bar: _ } ],
   ['glitch object', { msg_id: '8', location: { r: 3000, tsid: 'LLIER' } } ],
+  ['glitch ping', {"type":"ping","success":true,"ts":1411415614} ],
+  ['glitch deco_visibility', { type: 'deco_visibility', visible: false, deco_name: 'firebog_light_pool_1352760858568', fade_ms: true }],
+  ['glitch ping undefined', { msg_id: undefined, type: 'ping', success: true, ts: 1415740048 }],
+  ['glitch physics changes', {"type":"physics_changes","adjustments":{"keys":{"imagination":{"added_time":1342669406577,"can_3_jump":1,"can_wall_jump":0,"gravity":1,"is_img":1,"is_permanent":1,"multiplier_3_jump":0.8,"vx_max":1,"vy_jump":1}},"can_3_jump":true,"vx_max":1,"vy_max":1,"gravity":1,"vy_jump":1,"vx_accel_add_in_floor":1,"vx_accel_add_in_air":1,"friction_floor":1,"friction_air":1,"friction_thresh":1,"vx_off_ladder":1,"pc_scale":1,"item_scale":1,"y_cam_offset":1,"multiplier_3_jump":0.8}} ],
 ];
 
 
 
 // Test each type individually through serializer and then deserializer
 // note that this doesn't prove it works with Flash, just that it agrees with amflib.
-sys.puts('Serializing and deserializing '+tests.length+' test values');
+console.log('Serializing and deserializing '+tests.length+' test values');
 
 function dump(bin, prefix) {
+  var out = "";
   for (var i = 0; i < bin.length; i++) {
-    sys.puts(prefix + i + "> " + bin[i].charCodeAt());
+    out += ("00" + bin[i].charCodeAt().toString(16)).substr(-2);
   }
+  console.log("Serialized as: " + prefix + "> " + out);
 }
 
 function sanitize(value) {
@@ -74,7 +81,7 @@ for (var i = 0; i < tests.length; i++) {
   var test = tests[i];
   var descr = test[0];
   var value = test[1];
-  sys.puts( ' > ' + descr + ': ' + sanitize(value));
+  console.log( ' > ' + descr + ': ' + sanitize(value));
 
   // Test serialization using amflib as baseline.
   var experimentBuffer = amfcc.serialize(value);
@@ -83,9 +90,9 @@ for (var i = 0; i < tests.length; i++) {
     experimentBuffer.should.be.exactly(baselineBuffer);  
     succeeded += 1;
   } catch (e) {
-    sys.puts("Serialization error: " + e);
+    console.log("Serialization error: " + e);
     if (baselineBuffer.length != experimentBuffer.length) {
-      sys.puts("Baseline len: " + baselineBuffer.length 
+      console.log("Baseline len: " + baselineBuffer.length 
                + " vs. experiment len: " + experimentBuffer.length);
     } else {
       dump(baselineBuffer, "baseline");
@@ -107,13 +114,13 @@ for (var i = 0; i < tests.length; i++) {
     }
     succeeded += 1;
   } catch (e) {
-    sys.puts("Deserialization error: " + e.message);
-    sys.puts("Baseline: " + baselineValue);
+    console.log("Deserialization error: " + e.message);
+    console.log("Baseline: " + baselineValue);
     failed += 1;
   }
 }
 
-sys.puts(succeeded + "/" + (succeeded + failed) + " tests passing.");
+console.log(succeeded + "/" + (succeeded + failed) + " tests passing.");
 
 
 
