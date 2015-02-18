@@ -148,7 +148,7 @@ void Serializer::writeObject(Handle<Object> value) {
     writeU29(objRefs_[valueId] << 1);
     return;
   }
-  // else index object referenice
+  // else index object reference
   objRefs_[valueId] = objRefs_.size();
   // flag with instance, no traits, no externalizable
   writeU29(INSTANCE_NO_TRAITS_NO_EXTERNALIZABLE);

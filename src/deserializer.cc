@@ -11,7 +11,6 @@ using namespace v8;
 
 // TODO: clean up obj ref hacks to make it more readable; temp stack var is ugly
 // TODO: way better error messages
-// TODO: NanThrowError() takes formatstr
 // TODO: trigger GC to make sure no leaks
 
 Deserializer::Deserializer() {
