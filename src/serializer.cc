@@ -90,12 +90,8 @@ void Serializer::writeValue(Handle<Value> value) {
     writeArray(value.As<Array>());
   } else if (value->IsDate()) {
     writeDate(value->ToObject());
-  } else if (value->IsObject()) {
-    // else write vanilla Object
-    writeObject(value->ToObject());
   } else {
-    // Unknown type. TODO: error?
-    writeUndefined();
+    writeObject(value->ToObject());
   }
 }
 
