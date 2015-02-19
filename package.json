@@ -1,8 +1,8 @@
 {
   "name": "node_amf_cc",
-  "version": "v1.2.0",
+  "version": "v1.2.1",
   "scripts": {
-    "preinstall": "node-gyp configure && node-gyp build",
+    "install": "node-gyp configure && node-gyp build",
     "preuninstall": "rm -rf build/*"
   },
   "main": "build/Release/node_amf_cc.node",

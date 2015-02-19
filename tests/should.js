@@ -7,6 +7,11 @@ var sys = require('sys');
 var amfcc = require('../build/Release/node_amf_cc');
 
 var amflib = require('amflib/node-amf/amf');  // npm install amflib
+var Reflect = require('harmony-reflect');
+
+var proxy = new Proxy(
+{"type":"physics_changes","adjustments":{"keys":{"imagination":{"added_time":1342669406577,"can_3_jump":1,"can_wall_jump":0,"gravity":1,"is_img":1,"is_permanent":1,"multiplier_3_jump":0.8,"vx_max":1,"vy_jump":1}},"can_3_jump":true,"vx_max":1,"vy_max":1,"gravity":1,"vy_jump":1,"vx_accel_add_in_floor":1,"vx_accel_add_in_air":1,"friction_floor":1,"friction_air":1,"friction_thresh":1,"vx_off_ladder":1,"pc_scale":1,"item_scale":1,"y_cam_offset":1,"multiplier_3_jump":0.8}}
+, { "type": "bar", "foo" : 3 } );
 
 // data types to test with human-readable description
 var tests = [
@@ -55,6 +60,7 @@ var tests = [
   ['glitch deco_visibility', { type: 'deco_visibility', visible: false, deco_name: 'firebog_light_pool_1352760858568', fade_ms: true }],
   ['glitch ping undefined', { msg_id: undefined, type: 'ping', success: true, ts: 1415740048 }],
   ['glitch physics changes', {"type":"physics_changes","adjustments":{"keys":{"imagination":{"added_time":1342669406577,"can_3_jump":1,"can_wall_jump":0,"gravity":1,"is_img":1,"is_permanent":1,"multiplier_3_jump":0.8,"vx_max":1,"vy_jump":1}},"can_3_jump":true,"vx_max":1,"vy_max":1,"gravity":1,"vy_jump":1,"vx_accel_add_in_floor":1,"vx_accel_add_in_air":1,"friction_floor":1,"friction_air":1,"friction_thresh":1,"vx_off_ladder":1,"pc_scale":1,"item_scale":1,"y_cam_offset":1,"multiplier_3_jump":0.8}} ],
+  ['proxy', { foo: proxy } ],
 ];
 
 

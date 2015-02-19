@@ -148,14 +148,14 @@ void Serializer::writeObject(Handle<Object> value) {
   objRefs_[valueId] = objRefs_.size();
   // flag with instance, no traits, no externalizable
   writeU29(INSTANCE_NO_TRAITS_NO_EXTERNALIZABLE);
-  if (value->HasRealNamedProperty(NanNew<String>("type"))) {
+  if (value->HasOwnProperty(NanNew<String>("type"))) {
     writeUTF8(value->Get(NanNew<String>("type"))->ToString());
   } else {
     writeUTF8(NanNew<String>("Object")); 
   } 
 
   // write serializable properties
-  Local<Array> propertyNames = value->GetPropertyNames();
+  Local<Array> propertyNames = value->GetOwnPropertyNames();
   for (uint32_t i = 0; i < propertyNames->Length(); i++) {
     Handle<String> propName = propertyNames->Get(i)->ToString();
     Local<Value> propValue = value->Get(propName);
