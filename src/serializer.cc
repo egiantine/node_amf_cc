@@ -12,6 +12,7 @@
 #define isnan _isnan
 #endif
 
+#include <math.h>
 #include <memory>
 #include <nan.h>
 #include <node.h>
@@ -90,6 +91,8 @@ void Serializer::writeValue(Handle<Value> value) {
     writeArray(value.As<Array>());
   } else if (value->IsDate()) {
     writeDate(value->ToObject());
+  } else if (isProxiedArray(value)) {
+    writeProxiedArray(value->ToObject());
   } else {
     writeObject(value->ToObject());
   }
@@ -134,6 +137,74 @@ void Serializer::writeArray(Handle<Array> value) {
   for (int i = 0; i < len; i++) {
     writeValue(value->Get(i));
   }
+}
+
+// Hack, see https://trello.com/c/RjdSlKMl/107-array-wrapped-in-es6-proxy-not-amf-serialized-correctly
+void Serializer::writeProxiedArray(Handle<Object> value) {
+  writeU8(AMF::AMF3_ARRAY);
+  Local<Array> propertyNames = value->GetOwnPropertyNames();
+  int len = propertyNames->Length();
+  int flag = ( len << 1 ) | 1;
+  writeU29(flag);
+  writeUTF8(NanNew<String>(""));
+  for (int i = 0; i < len; i++) {
+    writeValue(value->Get(propertyNames->Get(i)));
+  }
+}
+
+namespace {
+// Returns the number of characters we expect the base 10 representation of
+// that integer to be.
+int base10length(int i) {
+  if (i == 0) return 1;
+  int k = 1 + floor(log10(i));
+  //printf("%d, %d\n", i, k);
+  return k;
+}
+}  // end namespace
+
+bool Serializer::isProxiedArray(Handle<Value> value) const {
+  if (value->IsObject()) {
+    // This isn't a proxy, so bail out
+    return false;
+  }
+  // This could be a proxied object or a proxied array. 
+  // Arrays are objects where the data is keyed by string representations
+  // of integers (e.g.: "0", "1", etc.) so let's see if all our object's
+  // keys meet that criteria.
+  Handle<Object> valueAsObject = value->ToObject();
+  Local<Array> propertyNames = valueAsObject->GetOwnPropertyNames();
+  
+  // Fast initial loop checks just the length of the key.
+  for (uint32_t i = 0; i < propertyNames->Length(); i++) {
+    Handle<Value> propNameAsValue = propertyNames->Get(i);
+    if (propNameAsValue->IsString() == false) {
+      return false;
+    }
+    Handle<String> propNameAsString = propNameAsValue->ToString();
+    if (propNameAsString->Utf8Length() != base10length(i)) {
+      //printf("%d != %d\n", propNameAsString->Utf8Length(), base10length(i));
+      return false;
+    }
+  }
+
+  // Now that we know the keys are short strings, we can safely do a more
+  // expensive inspection.
+  for (uint32_t i = 0; i < propertyNames->Length(); i++) {
+    Handle<String> key = propertyNames->Get(i)->ToString();
+    int encodedLen = key->Utf8Length();
+    std::vector<char> utf8str(encodedLen + 1);
+    key->WriteUtf8(utf8str.data());
+
+    std::vector<char> expected(base10length(i) + 1);
+    sprintf(expected.data(), "%d", i);
+    if (strcmp(expected.data(), utf8str.data())) {
+      //printf("%s != %s\n", utf8str.data(), expected.data());
+      return false;
+    }
+  }
+ 
+  return true;
 }
 
 void Serializer::writeObject(Handle<Object> value) {

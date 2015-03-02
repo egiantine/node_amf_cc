@@ -1,5 +1,6 @@
 /**
  * Unittests for node_amf_cc module.
+ *   $ node --harmony-proxies tests/should.js 
  */
 
 var should = require('should');
@@ -61,6 +62,10 @@ var tests = [
   ['glitch ping undefined', { msg_id: undefined, type: 'ping', success: true, ts: 1415740048 }],
   ['glitch physics changes', {"type":"physics_changes","adjustments":{"keys":{"imagination":{"added_time":1342669406577,"can_3_jump":1,"can_wall_jump":0,"gravity":1,"is_img":1,"is_permanent":1,"multiplier_3_jump":0.8,"vx_max":1,"vy_jump":1}},"can_3_jump":true,"vx_max":1,"vy_max":1,"gravity":1,"vy_jump":1,"vx_accel_add_in_floor":1,"vx_accel_add_in_air":1,"friction_floor":1,"friction_air":1,"friction_thresh":1,"vx_off_ladder":1,"pc_scale":1,"item_scale":1,"y_cam_offset":1,"multiplier_3_jump":0.8}} ],
   ['proxy', { foo: proxy } ],
+  ['proxy with array', { foo: new Proxy([35,63], {}) } ],
+  // We can't correctly serialize this right now :(
+  //['fake proxy with array', { foo: new Proxy({"0":35, "1":63}, {}) } ],
+  ['proxy non-array', { foo: new Proxy({"0":35, "2":63}, {}) } ],
 ];
 
 
@@ -83,11 +88,12 @@ function sanitize(value) {
 
 var succeeded = 0;
 var failed = 0;
+for (var xx = 0; xx < 2; xx++) {
 for (var i = 0; i < tests.length; i++) {
   var test = tests[i];
   var descr = test[0];
   var value = test[1];
-  console.log( ' > ' + descr + ': ' + sanitize(value));
+//  console.log( ' > ' + descr + ': ' + sanitize(value));
 
   // Test serialization using amflib as baseline.
   var experimentBuffer = amfcc.serialize(value);
@@ -125,7 +131,7 @@ for (var i = 0; i < tests.length; i++) {
     failed += 1;
   }
 }
-
+}
 console.log(succeeded + "/" + (succeeded + failed) + " tests passing.");
 
 
