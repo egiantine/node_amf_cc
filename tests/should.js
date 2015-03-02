@@ -88,12 +88,11 @@ function sanitize(value) {
 
 var succeeded = 0;
 var failed = 0;
-for (var xx = 0; xx < 2; xx++) {
 for (var i = 0; i < tests.length; i++) {
   var test = tests[i];
   var descr = test[0];
   var value = test[1];
-//  console.log( ' > ' + descr + ': ' + sanitize(value));
+  console.log( ' > ' + descr + ': ' + sanitize(value));
 
   // Test serialization using amflib as baseline.
   var experimentBuffer = amfcc.serialize(value);
@@ -131,7 +130,7 @@ for (var i = 0; i < tests.length; i++) {
     failed += 1;
   }
 }
-}
+
 console.log(succeeded + "/" + (succeeded + failed) + " tests passing.");
 
 
