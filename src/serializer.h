@@ -40,8 +40,6 @@ class Serializer : public node::ObjectWrap {
   void writeDouble(v8::Handle<v8::Value>, bool writeMarker = false);
   void writeU8(unsigned char n);
   void writeU29(int64_t n, bool writeMarker = false);
-  void writeProxiedArray(v8::Handle<v8::Object> value);
-  bool isProxiedArray(v8::Handle<v8::Value> value) const;
 
   WriteBuffer buffer_;
   hashmap::hash_map<int, int> objRefs_;
