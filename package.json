@@ -16,6 +16,6 @@
     "url": "http://elevengiants.com"
   },
   "dependencies": {
-    "nan": "^1.6.2"
+    "nan": "^1.8.0"
   }
 }
